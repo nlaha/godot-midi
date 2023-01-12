@@ -17,7 +17,7 @@ GodotMidi makes it easy to sync midi files to their corresponding rendered audio
 
 1. Download the latest release over at https://github.com/nlaha/GodotMidi/releases
 
-2. Extract it to your `res://addons/` folder
+2. Extract it to your `res://` folder such that both addons and bin are in the root of your project
 
 3. Enable the plugin in the godot project settings menu
 
