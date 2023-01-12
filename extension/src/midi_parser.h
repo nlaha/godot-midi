@@ -12,13 +12,14 @@
 #include <godot_cpp/variant/packed_byte_array.hpp>
 #include <godot_cpp/variant/typed_array.hpp>
 #include <godot_cpp/classes/animation.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 #include "utility.h"
 
 using namespace godot;
 
-class MIDIParser : public RefCounted
+class MidiParser : public RefCounted
 {
-    GDCLASS(MIDIParser, RefCounted);
+    GDCLASS(MidiParser, RefCounted);
 
 protected:
     static void _bind_methods();
@@ -38,6 +39,14 @@ public:
         uint32_t chunk_size;
         PackedByteArray chunk_data;
         MidiChunkType chunk_type;
+
+        RawMidiChunk()
+        {
+            chunk_id = "";
+            chunk_size = 0;
+            chunk_data = PackedByteArray();
+            chunk_type = MidiChunkType::Unknown;
+        };
 
         PackedByteArray load_from_bytes(PackedByteArray bytes);
     };
@@ -95,10 +104,7 @@ public:
 
         String to_string() const;
 
-        virtual EventType get_type() const
-        {
-            return EventType::System;
-        };
+        virtual EventType get_type() const = 0;
 
     protected:
         int32_t bytes_used;
@@ -246,8 +252,8 @@ public:
         bool parse_chunk(RawMidiChunk raw, MidiHeaderChunk &header);
     };
 
-    MIDIParser();
-    ~MIDIParser();
+    MidiParser();
+    ~MidiParser();
 };
 
 #endif // MIDI_PARSER_CLASS_H

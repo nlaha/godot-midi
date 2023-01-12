@@ -1,12 +1,13 @@
 #include "register_types.h"
 
-#include "midi_importer.h"
 #include "midi.h"
 #include "midi_parser.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/defs.hpp>
+#include <godot_cpp/godot.hpp>
+#include <godot_cpp/classes/editor_import_plugin.hpp>
 #include <godot_cpp/godot.hpp>
 
 using namespace godot;
@@ -17,9 +18,8 @@ void initialize_godotmidi_types(ModuleInitializationLevel p_level)
 	{
 		return;
 	}
-	ClassDB::register_class<MIDI>();
-	ClassDB::register_class<MidiImporter>();
-	ClassDB::register_class<MIDIParser>();
+	ClassDB::register_class<Midi>();
+	ClassDB::register_class<MidiParser>();
 }
 
 void uninitialize_godotmidi_types(ModuleInitializationLevel p_level)

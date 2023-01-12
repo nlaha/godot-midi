@@ -5,29 +5,29 @@
 using namespace godot;
 
 /// @brief override method for registering c++ functions in godot
-void MIDIParser::_bind_methods()
+void MidiParser::_bind_methods()
 {
 }
 
-MIDIParser::MIDIParser()
+MidiParser::MidiParser()
 {
 }
 
-MIDIParser::~MIDIParser()
+MidiParser::~MidiParser()
 {
 }
 
-/// @brief Loads a MIDI chunk from a stream of bytes
+/// @brief Loads a Midi chunk from a stream of bytes
 /// @param bytes the input stream of bytes
 /// @return the original byte stream minus the read data
-PackedByteArray MIDIParser::RawMidiChunk::load_from_bytes(PackedByteArray bytes)
+PackedByteArray MidiParser::RawMidiChunk::load_from_bytes(PackedByteArray bytes)
 {
-    chunk_id = String((char *)bytes.slice(0, 4).ptr());
+    chunk_id = bytes.slice(0, 4).get_string_from_ascii();
     // we have to use this custom function because chunk size is stored in big endian
     chunk_size = Utility::decode_int32_be(bytes, 4);
-    chunk_data = bytes.slice(8, chunk_size);
+    chunk_data = bytes.slice(8, 8 + chunk_size);
     // remove the chunk from the input stream
-    PackedByteArray new_bytes = bytes.slice(chunk_size + 8, bytes.size() - chunk_size - 8);
+    PackedByteArray new_bytes = bytes.slice(8 + chunk_size);
 
     if (chunk_id == "MThd")
     {
@@ -47,7 +47,7 @@ PackedByteArray MIDIParser::RawMidiChunk::load_from_bytes(PackedByteArray bytes)
     return new_bytes;
 }
 
-MIDIParser::MidiHeaderChunk::MidiHeaderChunk()
+MidiParser::MidiHeaderChunk::MidiHeaderChunk()
 {
     file_format = MidiFileFormat::SingleTrack;
     num_tracks = 0;
@@ -57,7 +57,7 @@ MIDIParser::MidiHeaderChunk::MidiHeaderChunk()
     end_of_track = false;
 }
 
-bool MIDIParser::MidiHeaderChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &header)
+bool MidiParser::MidiHeaderChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &header)
 {
     if (raw.chunk_type != MidiChunkType::Header)
         return false;
@@ -96,7 +96,7 @@ bool MIDIParser::MidiHeaderChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk 
 /// @brief constructor
 /// @param channel
 /// @param delta_time
-MIDIParser::MidiEvent::MidiEvent(int32_t channel, int32_t delta_time)
+MidiParser::MidiEvent::MidiEvent(int32_t channel, int32_t delta_time)
 {
     this->channel = channel;
     this->delta_time = delta_time;
@@ -104,26 +104,26 @@ MIDIParser::MidiEvent::MidiEvent(int32_t channel, int32_t delta_time)
 
 /// @brief copy constructor
 /// @param other
-MIDIParser::MidiEvent::MidiEvent(const MidiEvent &other)
+MidiParser::MidiEvent::MidiEvent(const MidiEvent &other)
 {
     this->channel = other.channel;
     this->delta_time = other.delta_time;
     this->bytes_used = other.bytes_used;
 }
 
-int32_t MIDIParser::MidiEvent::get_bytes_used() const
+int32_t MidiParser::MidiEvent::get_bytes_used() const
 {
     return this->bytes_used;
 }
 
 /// @brief prints the contents of the event to a nice string
 /// @return
-String MIDIParser::MidiEvent::to_string() const
+String MidiParser::MidiEvent::to_string() const
 {
     return String("MidiEvent: channel=") + String::num_int64(channel) + String(", delta_time=") + String::num_int64(delta_time);
 }
 
-MIDIParser::MidiEventNote::MidiEventNote(int32_t channel, int32_t delta_time, PackedByteArray data, NoteType event_type) : MidiEvent(channel, delta_time)
+MidiParser::MidiEventNote::MidiEventNote(int32_t channel, int32_t delta_time, PackedByteArray data, NoteType event_type) : MidiEvent(channel, delta_time)
 {
     this->event_type = event_type;
 
@@ -152,23 +152,32 @@ MIDIParser::MidiEventNote::MidiEventNote(int32_t channel, int32_t delta_time, Pa
     }
 }
 
-MIDIParser::MidiEventSystem::MidiEventSystem(int32_t delta_time, PackedByteArray data) : MidiEvent(0, delta_time)
+MidiParser::MidiEventSystem::MidiEventSystem(int32_t delta_time, PackedByteArray data) : MidiEvent(0, delta_time)
 {
     event_type = (MidiSystemEventType)data[0];
     bytes_used = 1;
 }
 
-MIDIParser::MidiEventMeta::MidiEventMeta(int32_t delta_time, PackedByteArray data) : MidiEvent(0, delta_time)
+MidiParser::MidiEventMeta::MidiEventMeta(int32_t delta_time, PackedByteArray data) : MidiEvent(0, delta_time)
 {
     // the first byte is always 0xFF
     // the second and third bytes are the event type and length
+    // UtilityFunctions::print(data.slice(0, 2).hex_encode());
     event_type = (MidiMetaEventType)data[1];
     event_data_length = Utility::decode_varint_be(data, 2, bytes_used);
-    data = data.slice(bytes_used + 2, event_data_length);
+    // print data length
+    // UtilityFunctions::print(String::num_int64(event_data_length));
+
+    if (event_data_length > 0)
+    {
+        this->data = data.slice(bytes_used + 2, (bytes_used + 2) + event_data_length);
+    }
+
     bytes_used = event_data_length + bytes_used + 1;
+    // UtilityFunctions::print(this->data.hex_encode());
 }
 
-void MIDIParser::MidiTrackChunk::IngestMetaEvent(MidiEventMeta meta_event, MidiHeaderChunk &header)
+void MidiParser::MidiTrackChunk::IngestMetaEvent(MidiEventMeta meta_event, MidiHeaderChunk &header)
 {
     switch (meta_event.event_type)
     {
@@ -224,7 +233,7 @@ void MIDIParser::MidiTrackChunk::IngestMetaEvent(MidiEventMeta meta_event, MidiH
     }
 }
 
-bool MIDIParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &header)
+bool MidiParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &header)
 {
     if (raw.chunk_type != MidiChunkType::Track)
         return false;
@@ -259,7 +268,7 @@ bool MIDIParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
             event_code = 0xFF;
         }
 
-        PackedByteArray event_data = raw.chunk_data.slice(offset - 1, raw.chunk_size - (offset - 1));
+        PackedByteArray event_data = raw.chunk_data.slice(offset - 1, raw.chunk_size);
 
         // the event code determines the type of the event
         std::unique_ptr<MidiEvent> ptr;
@@ -270,7 +279,7 @@ bool MIDIParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
             MidiEventNote note_off_event = MidiEventNote(channel, delta_time, event_data, MidiEventNote::NoteType::NoteOff);
             offset += note_off_event.get_bytes_used();
             note_events.push_back(note_off_event);
-            ptr = std::make_unique<MidiEvent>(note_off_event);
+            ptr = std::make_unique<MidiEventNote>(note_off_event);
             events.push_back(std::move(ptr));
             break;
         }
@@ -279,7 +288,7 @@ bool MIDIParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
             MidiEventNote note_on_event = MidiEventNote(channel, delta_time, event_data, MidiEventNote::NoteType::NoteOn);
             offset += note_on_event.get_bytes_used();
             note_events.push_back(note_on_event);
-            ptr = std::make_unique<MidiEvent>(note_on_event);
+            ptr = std::make_unique<MidiEventNote>(note_on_event);
             events.push_back(std::move(ptr));
             break;
         }
@@ -288,7 +297,7 @@ bool MIDIParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
             MidiEventNote note_aftertouch_event = MidiEventNote(channel, delta_time, event_data, MidiEventNote::NoteType::Aftertouch);
             offset += note_aftertouch_event.get_bytes_used();
             note_events.push_back(note_aftertouch_event);
-            ptr = std::make_unique<MidiEvent>(note_aftertouch_event);
+            ptr = std::make_unique<MidiEventNote>(note_aftertouch_event);
             events.push_back(std::move(ptr));
             break;
         }
@@ -297,7 +306,7 @@ bool MIDIParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
             MidiEventNote note_controller_event = MidiEventNote(channel, delta_time, event_data, MidiEventNote::NoteType::Controller);
             offset += note_controller_event.get_bytes_used();
             note_events.push_back(note_controller_event);
-            ptr = std::make_unique<MidiEvent>(note_controller_event);
+            ptr = std::make_unique<MidiEventNote>(note_controller_event);
             events.push_back(std::move(ptr));
             break;
         }
@@ -306,7 +315,7 @@ bool MIDIParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
             MidiEventNote note_program_change = MidiEventNote(channel, delta_time, event_data, MidiEventNote::NoteType::ProgramChange);
             offset += note_program_change.get_bytes_used();
             note_events.push_back(note_program_change);
-            ptr = std::make_unique<MidiEvent>(note_program_change);
+            ptr = std::make_unique<MidiEventNote>(note_program_change);
             events.push_back(std::move(ptr));
             break;
         }
@@ -315,7 +324,7 @@ bool MIDIParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
             MidiEventNote note_channel_pressure = MidiEventNote(channel, delta_time, event_data, MidiEventNote::NoteType::ChannelPressure);
             offset += note_channel_pressure.get_bytes_used();
             note_events.push_back(note_channel_pressure);
-            ptr = std::make_unique<MidiEvent>(note_channel_pressure);
+            ptr = std::make_unique<MidiEventNote>(note_channel_pressure);
             events.push_back(std::move(ptr));
             break;
         }
@@ -324,7 +333,7 @@ bool MIDIParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
             MidiEventNote note_pitch_blend = MidiEventNote(channel, delta_time, event_data, MidiEventNote::NoteType::PitchBend);
             offset += note_pitch_blend.get_bytes_used();
             note_events.push_back(note_pitch_blend);
-            ptr = std::make_unique<MidiEvent>(note_pitch_blend);
+            ptr = std::make_unique<MidiEventNote>(note_pitch_blend);
             events.push_back(std::move(ptr));
             break;
         }
@@ -333,7 +342,7 @@ bool MIDIParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
             MidiEventSystem system_event = MidiEventSystem(delta_time, event_data);
             offset += system_event.get_bytes_used();
             system_events.push_back(system_event);
-            ptr = std::make_unique<MidiEvent>(system_event);
+            ptr = std::make_unique<MidiEventSystem>(system_event);
             events.push_back(std::move(ptr));
             break;
         }
@@ -343,10 +352,12 @@ bool MIDIParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
             offset += meta_event.get_bytes_used();
             IngestMetaEvent(meta_event, header);
             meta_events.push_back(meta_event);
-            ptr = std::make_unique<MidiEvent>(meta_event);
+            ptr = std::make_unique<MidiEventMeta>(meta_event);
             events.push_back(std::move(ptr));
             break;
         }
         }
     }
+
+    return true;
 }

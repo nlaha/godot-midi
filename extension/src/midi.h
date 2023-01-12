@@ -11,24 +11,25 @@
 #include <godot_cpp/variant/string.hpp>
 #include <godot_cpp/variant/typed_array.hpp>
 #include <godot_cpp/classes/animation.hpp>
-#include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/classes/file_access.hpp>
+#include <godot_cpp/variant/array.hpp>
 #include <godot_cpp/variant/packed_byte_array.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 using namespace godot;
 
-class MIDI : public RefCounted
+class Midi : public RefCounted
 {
-    GDCLASS(MIDI, RefCounted);
+    GDCLASS(Midi, RefCounted);
 
 protected:
     static void _bind_methods();
 
 public:
-    MIDI();
-    ~MIDI();
+    Midi();
+    ~Midi();
 
-    Animation load_from_file(String file_path);
+    void load_from_file(String source_path, String save_path);
 };
 
 #endif // MIDI_CLASS_H

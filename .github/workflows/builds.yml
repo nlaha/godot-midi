@@ -2,13 +2,13 @@ name: Builds
 
 on: [pull_request]
 
-concurrency: 
+concurrency:
   group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-macos
   cancel-in-progress: true
 
 jobs:
   build:
-    runs-on:  ${{matrix.os}}
+    runs-on: ${{matrix.os}}
     name: ${{matrix.name}}
     strategy:
       fail-fast: false
@@ -54,7 +54,6 @@ jobs:
             arch: x86_64
 
     steps:
-
       - name: Checkout project
         uses: actions/checkout@v3
         with:
@@ -63,7 +62,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: "3.x"
 
       - name: Set up SCons
         shell: bash
@@ -96,11 +95,11 @@ jobs:
       - name: Delete compilation files
         if: ${{ matrix.platform == 'windows' }}
         run: |
-          Remove-Item game/bin/summator/* -Include *.exp,*.lib,*.pdb -Force
+          Remove-Item game/bin/godotmidi/* -Include *.exp,*.lib,*.pdb -Force
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: ${{ github.event.repository.name }}
           path: |
-            ${{ github.workspace }}/game/bin/summator/*
+            ${{ github.workspace }}/game/bin/godotmidi/*
