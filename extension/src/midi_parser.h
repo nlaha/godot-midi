@@ -13,6 +13,7 @@
 #include <godot_cpp/variant/typed_array.hpp>
 #include <godot_cpp/classes/animation.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <memory>
 #include "utility.h"
 
 using namespace godot;
