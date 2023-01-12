@@ -1,14 +1,17 @@
 # Godot Midi 4.0+
 A MIDI file importer for Godot 4.x
+
 **Note: this is a re-write of my Godot 3.5 extension GodotMidi**
+
+Now supporting polyphony!
 
 This plugin aims to make rythm game development and music syncing easier than ever before. Simply import a midi file like you would any other godot asset and it will get converted to an animation, this animation can then be paired with a "MidiManager" node that sends out signals every time a midi event is fired. This project is a work in progress and is lacking some features, so feel free to contribute any code or ideas over on the pull requests page.
 
-<img width="928" alt="image" src="https://user-images.githubusercontent.com/10292944/209430133-356d68e8-1399-49c2-aace-00449e016006.png">
+![image](https://user-images.githubusercontent.com/10292944/212020820-62d88977-ff34-455a-a45d-f334cef63396.png)
 
 GodotMidi makes it easy to sync midi files to their corresponding rendered audio, just add an audio stream to the auto-generated audio stream player (a child of MidiManager) and it will play when the midi file starts.
 
-<img width="325" alt="image" src="https://user-images.githubusercontent.com/10292944/209430189-eb94371b-b78c-4fda-8f2d-e694ec6fabe4.png">
+![image](https://user-images.githubusercontent.com/10292944/212021070-42f3728a-c3ec-43da-9173-035cd7812817.png)
 
 ## Installation
 
@@ -24,16 +27,18 @@ GodotMidi makes it easy to sync midi files to their corresponding rendered audio
 
 2. Add a "MidiManager" node to your scene, it will automatically add an AnimationPlayer as well
 
-**NOTE: MidiManager must be under the root of your scene, do not put it as a child of any other node**
-
-<img width="213" alt="image" src="https://user-images.githubusercontent.com/10292944/209430279-a2897206-9d93-4072-8b84-cf3cb9e3f16d.png">
+![image](https://user-images.githubusercontent.com/10292944/212020953-fe813fde-bc58-40a2-aad8-bef984282c78.png)
 
 3. Select the animation player and click the animation button to load an animation resource into the player
 
-<img width="164" alt="image" src="https://user-images.githubusercontent.com/10292944/209430316-0de7f136-a876-4a44-9f73-25763b238774.png">
+![image](https://user-images.githubusercontent.com/10292944/212021217-c7924909-de4f-44ab-800f-a67a92f91420.png)
+
+![image](https://user-images.githubusercontent.com/10292944/212021511-eee304b4-328b-41d7-a1b0-faaca74448ef.png)
 
 4. Browse to your midi file location, if the import worked correctly, it should be selectable as an animation resource just like a normal animation would.
 
-<img width="391" alt="image" src="https://user-images.githubusercontent.com/10292944/209430341-31bc7db6-b14b-497f-b584-f21a8361e6a7.png">
+![image](https://user-images.githubusercontent.com/10292944/212021652-0c1357c3-cc50-4f5c-b582-74b664db70c3.png)
 
 5. Have fun! The animation player should work just as a normal animation player would, each green dot corresponds to a MIDI event and a function call to `note_event_input(...)` in the MidiManager node.
+
+Open the demo project for an included music visualizer script!
