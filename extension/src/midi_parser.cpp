@@ -174,10 +174,9 @@ MidiParser::MidiEventMeta::MidiEventMeta(int32_t delta_time, PackedByteArray dat
     }
 
     bytes_used = event_data_length + bytes_used + 1;
-    // UtilityFunctions::print(this->data.hex_encode());
 }
 
-void MidiParser::MidiTrackChunk::IngestMetaEvent(MidiEventMeta meta_event, MidiHeaderChunk &header)
+void MidiParser::MidiTrackChunk::IngestMetaEvent(MidiEventMeta &meta_event, MidiHeaderChunk &header)
 {
     switch (meta_event.event_type)
     {
@@ -188,8 +187,8 @@ void MidiParser::MidiTrackChunk::IngestMetaEvent(MidiEventMeta meta_event, MidiH
         // first byte is always 0x06
         // second byte is the length of the text
         // the rest of the bytes are the text
+        meta_event.text = meta_event.data.slice(0, meta_event.event_data_length).get_string_from_ascii();
 
-        // TODO: implement markers
         break;
     }
     case MidiEventMeta::MidiMetaEventType::SetTempo:

@@ -4,9 +4,9 @@ extends Node
 class_name MidiManager
 
 # inspector exported vars
-@export var auto_play_midi = true;
-@export var auto_play_music = true;
-@export var loop_midi = true;
+@export var auto_play_midi = true
+@export var auto_play_music = true
+@export var loop_midi = true
 
 # output signal(s)
 signal note_event
@@ -14,9 +14,10 @@ signal meta_event
 signal system_event
 
 # private vars
-var midi_ap;
-var music_player;
-var midi_started;
+var midi_ap
+var music_player
+var midi_started
+var midi_start_signal = false
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -55,20 +56,19 @@ func _ready():
 			# loop the animation if loop_midi is enabled
 			midi_ap.get_animation(anim_name).loop_mode = Animation.LOOP_LINEAR
 			midi_ap.play(anim_name)
-		
-		if (auto_play_music):
-			music_player.play()
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
-	pass
-	
+	if (auto_play_music && midi_start_signal && !music_player.playing):
+		music_player.play()
+			
 func note_event_input(note, data, type, track):
 	emit_signal("note_event", note, data, type, track)
 	
-func meta_event_input(note, data, type, track):
-	emit_signal("meta_event", note, data, type, track)
+func meta_event_input(type, data, text, track):
+	midi_start_signal = true
+	emit_signal("meta_event", type, data, text, track)
 
-func system_event_input(note, data, type, track):
-	emit_signal("system_event", note, data, type, track)
+func system_event_input(type, track):
+	emit_signal("system_event", type, track)
 	

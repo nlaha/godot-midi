@@ -1,5 +1,7 @@
 extends Node3D
 
+@export var note_material : Material
+
 var mm
 var notes = []
 
@@ -16,7 +18,8 @@ func _process(delta):
 		# spawn a cube
 		var box = MeshInstance3D.new()
 		box.mesh = BoxMesh.new()
-		box.scale = Vector3(0.1, 0.01, 0.1)
+		box.scale = Vector3(0.1, 0.05, 0.1)
+		box.material_override = note_material
 		add_child(box)
 		box.owner = get_tree().edited_scene_root
 		box.position.x = remap(note, 0, 127, -10, 10)
@@ -24,6 +27,9 @@ func _process(delta):
 		
 	for note in notes:
 		note.position.y += delta
+		if note.position.y > 20:
+			notes.remove_at(notes.find(note))
+			note.queue_free()
 
 func on_note(note, data, type, track):
 	if (type == 0): # note on

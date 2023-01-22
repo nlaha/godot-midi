@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://cf5sqk6dd4esg"]
+[gd_scene load_steps=8 format=3 uid="uid://cf5sqk6dd4esg"]
 
 [ext_resource type="Animation" uid="uid://b12bcht2cwi2r" path="res://mii_channel.mid" id="2_43t5a"]
 [ext_resource type="Script" path="res://addons/godot_midi/midi_manager.gd" id="2_dt0je"]
@@ -10,8 +10,15 @@ _data = {
 "mii_channel": ExtResource("2_43t5a")
 }
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wh3eh"]
+albedo_color = Color(0, 4, 0, 1)
+emission_enabled = true
+emission = Color(0, 2, 0, 1)
+
 [sub_resource type="Environment" id="Environment_6map0"]
 background_mode = 1
+ssao_enabled = true
+glow_enabled = true
 
 [node name="Main" type="Node"]
 
@@ -35,6 +42,7 @@ transform = Transform3D(1, 0, 0, 0, 0.866026, 0.5, 0, -0.5, 0.866026, 0, 4, 5)
 [node name="CSGBox3D" type="CSGBox3D" parent="."]
 size = Vector3(18, 0.1, 1)
 script = ExtResource("5_35bct")
+note_material = SubResource("StandardMaterial3D_wh3eh")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_6map0")

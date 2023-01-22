@@ -195,12 +195,14 @@ public:
         MidiMetaEventType event_type;
         PackedByteArray data;
         int32_t event_data_length;
+        String text;
 
         MidiEventMeta(int32_t delta_time, PackedByteArray data);
         MidiEventMeta(const MidiEventMeta &other) : MidiEvent(other)
         {
             event_type = other.event_type;
             data = other.data;
+            text = other.text;
             event_data_length = other.event_data_length;
         }
 
@@ -249,7 +251,7 @@ public:
                 8};
         }
 
-        void IngestMetaEvent(MidiEventMeta meta_event, MidiHeaderChunk &header);
+        void IngestMetaEvent(MidiEventMeta &meta_event, MidiHeaderChunk &header);
         bool parse_chunk(RawMidiChunk raw, MidiHeaderChunk &header);
     };
 

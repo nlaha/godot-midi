@@ -89,6 +89,7 @@ void Midi::load_from_file(String source_path, String save_path)
                 Array args;
                 args.append(meta_event.event_type);
                 args.append(meta_event.data);
+                args.append(meta_event.text);
                 args.append(trk_idx);
                 evt_dict["args"] = args;
 
