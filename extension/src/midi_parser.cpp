@@ -144,7 +144,7 @@ MidiParser::MidiEventNote::MidiEventNote(int32_t channel, int32_t delta_time, Pa
     {
         this->channel = channel;
         this->note = data[1];
-        bytes_used = 2;
+        bytes_used = 1;
     }
     else
     {
@@ -178,9 +178,15 @@ MidiParser::MidiEventMeta::MidiEventMeta(int32_t delta_time, PackedByteArray dat
 
 void MidiParser::MidiTrackChunk::IngestMetaEvent(MidiEventMeta &meta_event, MidiHeaderChunk &header)
 {
-    switch (meta_event.event_type)
-    {
-    case MidiEventMeta::MidiMetaEventType::Marker:
+    // text events
+    if (
+        meta_event.event_type == MidiEventMeta::MidiMetaEventType::TextEvent 
+        || meta_event.event_type == MidiEventMeta::MidiMetaEventType::CopyRightNotice 
+        || meta_event.event_type == MidiEventMeta::MidiMetaEventType::SequenceOrTrackName 
+        || meta_event.event_type == MidiEventMeta::MidiMetaEventType::InstrumentName 
+        || meta_event.event_type == MidiEventMeta::MidiMetaEventType::Lyric 
+        || meta_event.event_type == MidiEventMeta::MidiMetaEventType::Marker 
+        || meta_event.event_type == MidiEventMeta::MidiMetaEventType::CuePoint)
     {
         // marker
         // variable length
@@ -189,8 +195,11 @@ void MidiParser::MidiTrackChunk::IngestMetaEvent(MidiEventMeta &meta_event, Midi
         // the rest of the bytes are the text
         meta_event.text = meta_event.data.slice(0, meta_event.event_data_length).get_string_from_ascii();
 
-        break;
+        return;
     }
+
+    switch (meta_event.event_type)
+    {
     case MidiEventMeta::MidiMetaEventType::SetTempo:
     {
         // set tempo
@@ -250,11 +259,19 @@ bool MidiParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
         int32_t bytes_used = 0;
         // first variable length quantity is delta time
         int32_t delta_time = Utility::decode_varint_be(raw.chunk_data, offset, bytes_used);
+        int start_offset = offset;
         offset += bytes_used;
 
         // next byte is the event type | channel
         int32_t event_type = raw.chunk_data[offset];
         offset += 1;
+
+        // // print event type
+        // // print binary
+        // PackedByteArray barray;
+        // barray.resize(1);
+        // barray[0] = event_type;
+        // UtilityFunctions::print(Utility::print_bits(barray));
 
         // the event type is the first 4 bits of the byte
         // the channel is the last 4 bits
@@ -266,6 +283,9 @@ bool MidiParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
         {
             event_code = 0xFF;
         }
+
+        // print event code
+        UtilityFunctions::print(String("EVENT: ") + String::num_int64(event_code));
 
         PackedByteArray event_data = raw.chunk_data.slice(offset - 1, raw.chunk_size);
 
@@ -354,6 +374,24 @@ bool MidiParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
             ptr = std::make_unique<MidiEventMeta>(meta_event);
             events.push_back(std::move(ptr));
             break;
+        }
+        case 0xF0: // system exclusive
+        {
+            int bytes_used = 0;
+            int length = Utility::decode_varint_be(event_data, 0, bytes_used);
+            UtilityFunctions::print(String("System exclusive event, length: ") + String::num_int64(length));
+            offset += length + bytes_used;
+            break;
+        }
+        default:
+        {
+            // unknown event type
+            UtilityFunctions::print(String("Unknown event type"));
+            UtilityFunctions::print(Utility::print_bits(raw.chunk_data.slice(start_offset)));
+            // print delta time (parsed)
+            UtilityFunctions::print(String("Delta time: ") + String::num_int64(delta_time));
+            // print bytes used for delta time
+            UtilityFunctions::print(String("Bytes used for delta time: ") + String::num_int64(bytes_used));
         }
         }
     }

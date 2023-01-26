@@ -12,3 +12,4 @@ dest_files=["res://.godot/imported/mii_channel.mid-65a1f1ae83fe8e619f2b937cc77ff
 
 [params]
 
+only_notes=false

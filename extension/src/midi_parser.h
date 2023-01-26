@@ -74,6 +74,7 @@ public:
         int32_t division;
         int32_t tempo;
         bool end_of_track;
+        bool only_notes;
 
         MidiHeaderChunk();
         bool parse_chunk(RawMidiChunk raw, MidiHeaderChunk &header);
@@ -122,7 +123,8 @@ public:
             Controller,
             ProgramChange,
             ChannelPressure,
-            PitchBend
+            PitchBend,
+            Unknown
         };
 
         uint8_t note;

@@ -30,7 +30,7 @@ public:
     Midi();
     ~Midi();
 
-    void load_from_file(String source_path, String save_path);
+    void load_from_file(String source_path, String save_path, bool only_notes);
 };
 
 #endif // MIDI_CLASS_H

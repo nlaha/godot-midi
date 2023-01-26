@@ -12,6 +12,7 @@ class_name MidiManager
 signal note_event
 signal meta_event
 signal system_event
+signal song_start
 
 # private vars
 var midi_ap
@@ -21,6 +22,8 @@ var midi_start_signal = false
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+
+	print("[GodotMidi] Audio server time delay: " + str(AudioServer.get_output_latency()))
 	
 	# set up nodes in editor
 	if (Engine.is_editor_hint()):
@@ -61,8 +64,12 @@ func _ready():
 func _process(delta):
 	if (auto_play_music && midi_start_signal && !music_player.playing):
 		music_player.play()
-			
+		emit_signal("song_start")
+func marker_input(type, times):
+	pass
+
 func note_event_input(note, data, type, track):
+	midi_start_signal = true
 	emit_signal("note_event", note, data, type, track)
 	
 func meta_event_input(type, data, text, track):
@@ -70,5 +77,6 @@ func meta_event_input(type, data, text, track):
 	emit_signal("meta_event", type, data, text, track)
 
 func system_event_input(type, track):
+	midi_start_signal = true
 	emit_signal("system_event", type, track)
 	

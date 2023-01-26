@@ -18,7 +18,7 @@ Midi::~Midi()
 /// @brief converts a midi file to an animation resource
 /// @param file_path the path to the midi file
 /// @return an animation resource
-void Midi::load_from_file(String source_path, String save_path)
+void Midi::load_from_file(String source_path, String save_path, bool only_notes)
 {
     UtilityFunctions::print(String("loading midi file: ") + source_path);
 
@@ -45,18 +45,33 @@ void Midi::load_from_file(String source_path, String save_path)
     // parse header chunk
     MidiParser::MidiHeaderChunk header;
     header.parse_chunk(header_chunk, header);
+    header.only_notes = only_notes;
+
+    // print header info
+    UtilityFunctions::print(String("midi file format: ") + String::num_int64(header.file_format));
+    UtilityFunctions::print(String("midi division type: ") + String::num_int64(header.division_type));
+    UtilityFunctions::print(String("midi division: ") + String::num_int64(header.division));
+    UtilityFunctions::print(String("midi tempo: ") + String::num_int64(header.tempo));
+    UtilityFunctions::print(String("midi num tracks: ") + String::num_int64(header.num_tracks));
 
     // create animation track for each midi track
     // plus some more for polyphony support
-    for (int i = 0; i < header.num_tracks * 16; i++)
+    // plus 3 for the 2 more meta tracks
+    for (int i = 0; i < (header.num_tracks * 16) + 3; i++)
     {
         // create animation track
         p_anim->add_track(Animation::TrackType::TYPE_METHOD);
         p_anim->track_set_path(i, NodePath("../MidiManager"));
     }
 
+    Array layers;
+    Array sections;
+    int layers_idx = 0;
+    int sections_idx = 0;
+
     std::vector<double> track_times(header.num_tracks * 16, 0);
-    for (int trk_idx = 0; trk_idx < header.num_tracks * 16; trk_idx += 16)
+    int trk_idx = 0;
+    for (trk_idx = 0; trk_idx < header.num_tracks * 16; trk_idx += 16)
     {
         double track_time = 0;
         // read track chunk
@@ -68,7 +83,7 @@ void Midi::load_from_file(String source_path, String save_path)
         track.parse_chunk(trackChunk, header);
 
         // loop through note events
-        float time = 0;
+        double time = 0;
         for (int i = 0; i < track.events.size(); i++)
         {
             // get event pointer
@@ -81,6 +96,9 @@ void Midi::load_from_file(String source_path, String save_path)
             {
 
                 MidiParser::MidiEventMeta meta_event = *dynamic_cast<MidiParser::MidiEventMeta *>(p_event.get());
+                delta_time = (double)meta_event.delta_time;
+
+                UtilityFunctions::print(String("Parsing meta event: " + String::num_int64(meta_event.event_type)));
 
                 // insert as key in animation track
                 // key will contain type and data
@@ -89,7 +107,23 @@ void Midi::load_from_file(String source_path, String save_path)
                 Array args;
                 args.append(meta_event.event_type);
                 args.append(meta_event.data);
-                args.append(meta_event.text);
+
+                if (meta_event.event_type == MidiParser::MidiEventMeta::MidiMetaEventType::SequenceOrTrackName)
+                {
+                    if (meta_event.text == "LayerChange")
+                        layers_idx = trk_idx;
+                    else if (meta_event.text == "SectionChange")
+                        sections_idx = trk_idx;
+                }
+
+                if (meta_event.text != "")
+                {
+                    args.append(meta_event.text);
+                }
+                else
+                {
+                    args.append(String("GM_Null"));
+                }
                 args.append(trk_idx);
                 evt_dict["args"] = args;
 
@@ -100,12 +134,53 @@ void Midi::load_from_file(String source_path, String save_path)
                     tick_duration = (double)header.tempo / (double)header.division;
                 }
 
-                p_anim->track_insert_key(trk_idx, time, evt_dict);
+                double delta_microseconds = (double)delta_time * tick_duration;
+                double delta_seconds = delta_microseconds / 1000000.0;
+                time += delta_seconds;
+
+                // if we're playing two meta events at the same time
+                // move to the next track until we can insert
+                int poly_track_idx = trk_idx;
+                while (p_anim->track_find_key(poly_track_idx, time, Animation::FindMode::FIND_MODE_EXACT) != -1)
+                {
+                    if ((poly_track_idx + 1) % 16 == 0)
+                    {
+                        break;
+                    }
+                    poly_track_idx += 1;
+                }
+                p_anim->track_insert_key(poly_track_idx, time, evt_dict);
             }
 
             if (p_event->get_type() == MidiParser::MidiEvent::EventType::Note)
             {
                 MidiParser::MidiEventNote note_event = *dynamic_cast<MidiParser::MidiEventNote *>(p_event.get());
+                delta_time = (double)note_event.delta_time;
+                double delta_microseconds = (double)delta_time * tick_duration;
+                double delta_seconds = delta_microseconds / 1000000.0;
+                time += delta_seconds;
+
+                if (trk_idx == layers_idx) {
+                    
+                    if (note_event.event_type == MidiParser::MidiEventNote::NoteType::NoteOn) {
+                        layers.append(time);
+                    }
+                }
+
+                if (trk_idx == sections_idx) {
+                    if (note_event.event_type == MidiParser::MidiEventNote::NoteType::NoteOn) {
+                        sections.append(time);
+                    }
+                }
+
+                // if we're only playing notes, skip other events
+                if (header.only_notes && note_event.event_type == MidiParser::MidiEventNote::NoteType::Controller
+                || header.only_notes && note_event.event_type == MidiParser::MidiEventNote::NoteType::ProgramChange
+                || header.only_notes && note_event.event_type == MidiParser::MidiEventNote::NoteType::PitchBend
+                || header.only_notes && note_event.event_type == MidiParser::MidiEventNote::NoteType::ChannelPressure)
+                {
+                    continue;
+                }
 
                 // insert event as key in animation track
                 Dictionary evt_dict;
@@ -122,20 +197,24 @@ void Midi::load_from_file(String source_path, String save_path)
                 int poly_track_idx = trk_idx;
                 while (p_anim->track_find_key(poly_track_idx, time, Animation::FindMode::FIND_MODE_EXACT) != -1)
                 {
-                    poly_track_idx += 1;
-                    if (poly_track_idx % 16 == 0)
+                    if ((poly_track_idx + 1) % 16 == 0)
                     {
                         break;
                     }
+                    poly_track_idx += 1;
                 }
                 p_anim->track_insert_key(poly_track_idx, time, evt_dict);
-
-                delta_time = (double)note_event.delta_time;
             }
 
             if (p_event->get_type() == MidiParser::MidiEvent::EventType::System)
             {
                 MidiParser::MidiEventSystem system_event = *dynamic_cast<MidiParser::MidiEventSystem *>(p_event.get());
+                delta_time = (double)system_event.delta_time;
+                double delta_microseconds = (double)delta_time * tick_duration;
+                double delta_seconds = delta_microseconds / 1000000.0;
+                time += delta_seconds;
+                UtilityFunctions::print(String("Parsing system event: " + String::num_int64(system_event.event_type)));
+
                 // insert event as key in animation track
                 // note dict will store note, data, note type and track
                 Dictionary evt_dict;
@@ -146,13 +225,13 @@ void Midi::load_from_file(String source_path, String save_path)
                 evt_dict["args"] = args;
 
                 p_anim->track_insert_key(trk_idx, time, evt_dict);
-
-                delta_time = (double)system_event.delta_time;
             }
 
-            double delta_microseconds = (double)delta_time * tick_duration;
-            double delta_seconds = delta_microseconds / 1000000.0;
-            time += (float)delta_seconds;
+            if (trk_idx == layers_idx) {
+                UtilityFunctions::print("delta: " + String::num_real(delta_time));
+                // print type
+                UtilityFunctions::print("type: " + String::num_int64(p_event->get_type()));
+            }
         }
         track_time += time;
         track_times[trk_idx] = track_time;
@@ -165,10 +244,28 @@ void Midi::load_from_file(String source_path, String save_path)
         {
             p_anim->remove_track(i);
             i--;
+            trk_idx -= 1;
         }
     }
 
     p_anim->set_length(*std::max_element(std::begin(track_times), std::end(track_times)));
+
+    // marker_input(type, times)
+    Dictionary evt_dict;
+    evt_dict["method"] = "marker_input";
+    Array args;
+    args.append("LayerChange");
+    args.append(layers);
+    evt_dict["args"] = args;
+    p_anim->track_insert_key(trk_idx + 1, 0, evt_dict);
+
+    // marker_input(type, times)
+    evt_dict["method"] = "marker_input";
+    args.clear();
+    args.append("SectionChange");
+    args.append(sections);
+    evt_dict["args"] = args;
+    p_anim->track_insert_key(trk_idx + 2, 0, evt_dict);
 
     // save animation resource
     ResourceSaver saver;
@@ -178,5 +275,5 @@ void Midi::load_from_file(String source_path, String save_path)
 /// @brief override method for registering c++ functions in godot
 void Midi::_bind_methods()
 {
-    ClassDB::bind_method(D_METHOD("load_from_file", "path"), &Midi::load_from_file, DEFVAL(""));
+    ClassDB::bind_method(D_METHOD("load_from_file", "source_path", "save_path", "only_notes"), &Midi::load_from_file, DEFVAL(""), DEFVAL(""), DEFVAL(false));
 }
