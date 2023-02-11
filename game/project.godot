@@ -8,16 +8,6 @@
 
 config_version=5
 
-_global_script_classes=[{
-"base": "Node",
-"class": &"MidiManager",
-"language": &"GDScript",
-"path": "res://addons/godot_midi/midi_manager.gd"
-}]
-_global_script_class_icons={
-"MidiManager": ""
-}
-
 [application]
 
 config/name="GDExtensionGodotMidi"
