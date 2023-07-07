@@ -15,6 +15,7 @@
       "environment": [],
       "externalConsole": false,
       "MIMode": "gdb",
+      "miDebuggerPath": "C:\\Users\\nlaha\\scoop\\shims\\gdb.exe",
       "setupCommands": [
         {
           "description": "Enable pretty-printing for gdb",
