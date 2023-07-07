@@ -55,9 +55,8 @@ void Midi::load_from_file(String source_path, String save_path, bool only_notes)
     UtilityFunctions::print(String("midi num tracks: ") + String::num_int64(header.num_tracks));
 
     // create animation track for each midi track
-    // plus some more for polyphony support
     // plus 3 for the 2 more meta tracks
-    for (int i = 0; i < (header.num_tracks * 16) + 3; i++)
+    for (int i = 0; i < (header.num_tracks) + 3; i++)
     {
         // create animation track
         p_anim->add_track(Animation::TrackType::TYPE_METHOD);
@@ -69,9 +68,9 @@ void Midi::load_from_file(String source_path, String save_path, bool only_notes)
     int layers_idx = 0;
     int sections_idx = 0;
 
-    std::vector<double> track_times(header.num_tracks * 16, 0);
+    std::vector<double> track_times(header.num_tracks, 0);
     int trk_idx = 0;
-    for (trk_idx = 0; trk_idx < header.num_tracks * 16; trk_idx += 16)
+    for (trk_idx = 0; trk_idx < header.num_tracks; trk_idx += 1)
     {
         double track_time = 0;
         // read track chunk
@@ -138,18 +137,7 @@ void Midi::load_from_file(String source_path, String save_path, bool only_notes)
                 double delta_seconds = delta_microseconds / 1000000.0;
                 time += delta_seconds;
 
-                // if we're playing two meta events at the same time
-                // move to the next track until we can insert
-                int poly_track_idx = trk_idx;
-                while (p_anim->track_find_key(poly_track_idx, time, Animation::FindMode::FIND_MODE_EXACT) != -1)
-                {
-                    if ((poly_track_idx + 1) % 16 == 0)
-                    {
-                        break;
-                    }
-                    poly_track_idx += 1;
-                }
-                p_anim->track_insert_key(poly_track_idx, time, evt_dict);
+                p_anim->track_insert_key(trk_idx, time, evt_dict);
             }
 
             if (p_event->get_type() == MidiParser::MidiEvent::EventType::Note)
@@ -192,18 +180,7 @@ void Midi::load_from_file(String source_path, String save_path, bool only_notes)
                 args.append(trk_idx);
                 evt_dict["args"] = args;
 
-                // if we're playing two notes at the same time
-                // move to the next track until we can insert
-                int poly_track_idx = trk_idx;
-                while (p_anim->track_find_key(poly_track_idx, time, Animation::FindMode::FIND_MODE_EXACT) != -1)
-                {
-                    if ((poly_track_idx + 1) % 16 == 0)
-                    {
-                        break;
-                    }
-                    poly_track_idx += 1;
-                }
-                p_anim->track_insert_key(poly_track_idx, time, evt_dict);
+                p_anim->track_insert_key(trk_idx, time, evt_dict);
             }
 
             if (p_event->get_type() == MidiParser::MidiEvent::EventType::System)
