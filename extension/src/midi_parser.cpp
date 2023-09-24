@@ -47,6 +47,7 @@ PackedByteArray MidiParser::RawMidiChunk::load_from_bytes(PackedByteArray bytes)
     return new_bytes;
 }
 
+/// @brief default constructor for header
 MidiParser::MidiHeaderChunk::MidiHeaderChunk()
 {
     file_format = MidiFileFormat::SingleTrack;
@@ -57,6 +58,10 @@ MidiParser::MidiHeaderChunk::MidiHeaderChunk()
     end_of_track = false;
 }
 
+/// @brief parses a chunk of raw bytes into a header chunk
+/// @param raw the raw chunk of bytes
+/// @param header the header chunk to populate
+/// @return true if the chunk was parsed successfully, false otherwise
 bool MidiParser::MidiHeaderChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &header)
 {
     if (raw.chunk_type != MidiChunkType::Header)
@@ -111,6 +116,8 @@ MidiParser::MidiEvent::MidiEvent(const MidiEvent &other)
     this->bytes_used = other.bytes_used;
 }
 
+/// @brief gets the number of bytes used by the event
+/// @return
 int32_t MidiParser::MidiEvent::get_bytes_used() const
 {
     return this->bytes_used;
@@ -123,6 +130,11 @@ String MidiParser::MidiEvent::to_string() const
     return String("MidiEvent: channel=") + String::num_int64(channel) + String(", delta_time=") + String::num_int64(delta_time);
 }
 
+/// @brief Constructor for MIDI note events
+/// @param channel the MIDI channel
+/// @param delta_time the delta time
+/// @param data the data for the event
+/// @param event_type the type of the event
 MidiParser::MidiEventNote::MidiEventNote(int32_t channel, int32_t delta_time, PackedByteArray data, NoteType event_type) : MidiEvent(channel, delta_time)
 {
     this->event_type = event_type;
@@ -152,12 +164,18 @@ MidiParser::MidiEventNote::MidiEventNote(int32_t channel, int32_t delta_time, Pa
     }
 }
 
+/// @brief Constructor for MIDI system events
+/// @param delta_time
+/// @param data
 MidiParser::MidiEventSystem::MidiEventSystem(int32_t delta_time, PackedByteArray data) : MidiEvent(0, delta_time)
 {
     event_type = (MidiSystemEventType)data[0];
     bytes_used = 1;
 }
 
+/// @brief Constructor for MIDI meta events
+/// @param delta_time
+/// @param data
 MidiParser::MidiEventMeta::MidiEventMeta(int32_t delta_time, PackedByteArray data) : MidiEvent(0, delta_time)
 {
     // the first byte is always 0xFF
@@ -176,17 +194,14 @@ MidiParser::MidiEventMeta::MidiEventMeta(int32_t delta_time, PackedByteArray dat
     bytes_used = event_data_length + bytes_used + 1;
 }
 
+/// @brief Parses the different meta event types
+/// @param meta_event the meta event to parse
+/// @param header the header chunk (will be modified for tempo changes, etc.)
 void MidiParser::MidiTrackChunk::IngestMetaEvent(MidiEventMeta &meta_event, MidiHeaderChunk &header)
 {
     // text events
     if (
-        meta_event.event_type == MidiEventMeta::MidiMetaEventType::TextEvent 
-        || meta_event.event_type == MidiEventMeta::MidiMetaEventType::CopyRightNotice 
-        || meta_event.event_type == MidiEventMeta::MidiMetaEventType::SequenceOrTrackName 
-        || meta_event.event_type == MidiEventMeta::MidiMetaEventType::InstrumentName 
-        || meta_event.event_type == MidiEventMeta::MidiMetaEventType::Lyric 
-        || meta_event.event_type == MidiEventMeta::MidiMetaEventType::Marker 
-        || meta_event.event_type == MidiEventMeta::MidiMetaEventType::CuePoint)
+        meta_event.event_type == MidiEventMeta::MidiMetaEventType::TextEvent || meta_event.event_type == MidiEventMeta::MidiMetaEventType::CopyRightNotice || meta_event.event_type == MidiEventMeta::MidiMetaEventType::SequenceOrTrackName || meta_event.event_type == MidiEventMeta::MidiMetaEventType::InstrumentName || meta_event.event_type == MidiEventMeta::MidiMetaEventType::Lyric || meta_event.event_type == MidiEventMeta::MidiMetaEventType::Marker || meta_event.event_type == MidiEventMeta::MidiMetaEventType::CuePoint)
     {
         // marker
         // variable length
@@ -241,6 +256,10 @@ void MidiParser::MidiTrackChunk::IngestMetaEvent(MidiEventMeta &meta_event, Midi
     }
 }
 
+/// @brief The main chunk parser, takes bytes from the input stream and parses them into MIDI chunks
+/// @param raw the raw chunk of bytes
+/// @param header the header chunk (will be modified for tempo changes, etc.)
+/// @return
 bool MidiParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &header)
 {
     if (raw.chunk_type != MidiChunkType::Track)
@@ -265,13 +284,6 @@ bool MidiParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
         // next byte is the event type | channel
         int32_t event_type = raw.chunk_data[offset];
         offset += 1;
-
-        // // print event type
-        // // print binary
-        // PackedByteArray barray;
-        // barray.resize(1);
-        // barray[0] = event_type;
-        // UtilityFunctions::print(Utility::print_bits(barray));
 
         // the event type is the first 4 bits of the byte
         // the channel is the last 4 bits
