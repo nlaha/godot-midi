@@ -39,16 +39,16 @@ jobs:
             platform: macos
             arch: universal
           - identifier: linux-debug
-            os: ubuntu-18.04
+            os: ubuntu-22.04
             name: 🐧 Linux Debug
-            runner: ubuntu-20.04
+            runner: ubuntu-22.04
             target: template_debug
             platform: linux
             arch: x86_64
           - identifier: linux-release
-            os: ubuntu-18.04
+            os: ubuntu-22.04
             name: 🐧 Linux Release
-            runner: ubuntu-20.04
+            runner: ubuntu-22.04
             target: template_release
             platform: linux
             arch: x86_64
