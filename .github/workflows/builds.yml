@@ -41,14 +41,14 @@ jobs:
           - identifier: linux-debug
             os: ubuntu-22.04
             name: 🐧 Linux Debug
-            runner: ubuntu-22.04
+            runner: self-hosted
             target: template_debug
             platform: linux
             arch: x86_64
           - identifier: linux-release
             os: ubuntu-22.04
             name: 🐧 Linux Release
-            runner: ubuntu-22.04
+            runner: self-hosted
             target: template_release
             platform: linux
             arch: x86_64
