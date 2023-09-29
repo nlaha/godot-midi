@@ -1,4 +1,4 @@
-# Godot Midi 4.0+
+# Godot Midi 4.x
 A MIDI file importer for Godot 4.x
 
 **Note: this is a re-write of my Godot 3.5 extension GodotMidi**
