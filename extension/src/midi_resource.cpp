@@ -67,7 +67,7 @@ Error MidiResource::load_file(const String &p_path)
             // get event pointer
             std::unique_ptr<MidiParser::MidiEvent> p_event = std::move(track.events[i]);
 
-            double delta_time = 0.0f;
+            double delta_time = 0.0;
             double tick_duration = (double)header.tempo / (double)header.division;
 
             // meta events
@@ -75,6 +75,11 @@ Error MidiResource::load_file(const String &p_path)
             {
                 MidiParser::MidiEventMeta meta_event = *dynamic_cast<MidiParser::MidiEventMeta *>(p_event.get());
                 delta_time = (double)meta_event.delta_time;
+
+                // increment current time
+                double delta_microseconds = (double)delta_time * tick_duration;
+                double delta_seconds = delta_microseconds / 1000000.0;
+                time += delta_seconds;
 
                 // load meta event into current track
                 Dictionary event_dict;
@@ -94,11 +99,6 @@ Error MidiResource::load_file(const String &p_path)
                 {
                     this->tracks[trk_idx].set("name", meta_event.text);
                 }
-
-                // increment current time
-                double delta_microseconds = (double)delta_time * tick_duration;
-                double delta_seconds = delta_microseconds / 1000000.0;
-                time += delta_seconds;
             }
 
             // note events
@@ -106,6 +106,11 @@ Error MidiResource::load_file(const String &p_path)
             {
                 MidiParser::MidiEventNote note_event = *dynamic_cast<MidiParser::MidiEventNote *>(p_event.get());
                 delta_time = (double)note_event.delta_time;
+
+                // increment current time
+                double delta_microseconds = (double)delta_time * tick_duration;
+                double delta_seconds = delta_microseconds / 1000000.0;
+                time += delta_seconds;
 
                 // load note event into current track
                 Dictionary event_dict;
@@ -119,11 +124,6 @@ Error MidiResource::load_file(const String &p_path)
                 // add event to track
                 Array event_array = this->tracks[trk_idx].get("events");
                 event_array.push_back(event_dict);
-
-                // increment current time
-                double delta_microseconds = (double)delta_time * tick_duration;
-                double delta_seconds = delta_microseconds / 1000000.0;
-                time += delta_seconds;
             }
 
             // system events
@@ -131,6 +131,11 @@ Error MidiResource::load_file(const String &p_path)
             {
                 MidiParser::MidiEventSystem system_event = *dynamic_cast<MidiParser::MidiEventSystem *>(p_event.get());
                 delta_time = (double)system_event.delta_time;
+
+                // increment current time
+                double delta_microseconds = (double)delta_time * tick_duration;
+                double delta_seconds = delta_microseconds / 1000000.0;
+                time += delta_seconds;
 
                 // load system event into current track
                 Dictionary event_dict;
@@ -142,11 +147,6 @@ Error MidiResource::load_file(const String &p_path)
                 // add event to track
                 Array event_array = this->tracks[trk_idx].get("events");
                 event_array.push_back(event_dict);
-
-                // increment current time
-                double delta_microseconds = (double)delta_time * tick_duration;
-                double delta_seconds = delta_microseconds / 1000000.0;
-                time += delta_seconds;
             }
         }
     }
