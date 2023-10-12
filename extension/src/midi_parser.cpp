@@ -297,7 +297,7 @@ bool MidiParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
         }
 
         // print event code
-        UtilityFunctions::print(String("EVENT: ") + String::num_int64(event_code));
+        // UtilityFunctions::print(String("EVENT: ") + String::num_int64(event_code));
 
         PackedByteArray event_data = raw.chunk_data.slice(offset - 1, raw.chunk_size);
 
