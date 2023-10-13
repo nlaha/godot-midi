@@ -1,9 +1,16 @@
-[gd_scene load_steps=3 format=3 uid="uid://bvaqq3i1ucrqb"]
+[gd_scene load_steps=5 format=3 uid="uid://bvaqq3i1ucrqb"]
 
 [ext_resource type="Script" path="res://addons/godot_midi/views/track.gd" id="1_qhdoj"]
+[ext_resource type="Shader" path="res://addons/godot_midi/views/checkerboard.gdshader" id="2_m3vsd"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5gki5"]
 bg_color = Color(0.0588235, 0.0588235, 0.0588235, 1)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_4hed8"]
+shader = ExtResource("2_m3vsd")
+shader_parameter/scale = Vector2(943.66, 33)
+shader_parameter/color1 = Color(0.0901961, 0.0901961, 0.0901961, 0)
+shader_parameter/color2 = Color(0.0509804, 0.0509804, 0.0509804, 1)
 
 [node name="Track" type="Panel"]
 custom_minimum_size = Vector2(0, 256)
@@ -59,6 +66,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+follow_focus = true
 horizontal_scroll_mode = 2
 
 [node name="NoteContainer" type="Control" parent="HBoxContainer/Panel/ScrollContainer"]
@@ -67,3 +75,15 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 mouse_filter = 2
+
+[node name="GridBackground" type="ColorRect" parent="HBoxContainer/Panel/ScrollContainer/NoteContainer"]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_4hed8")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[connection signal="scroll_ended" from="HBoxContainer/Panel/ScrollContainer" to="." method="_on_scroll_container_scroll_ended"]
