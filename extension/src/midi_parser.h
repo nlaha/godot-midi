@@ -45,7 +45,6 @@ public:
         {
             chunk_id = "";
             chunk_size = 0;
-            chunk_data = PackedByteArray();
             chunk_type = MidiChunkType::Unknown;
         };
 

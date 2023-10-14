@@ -25,8 +25,25 @@ if env["platform"] == "macos":
     )
 else:
     library = env.SharedLibrary(
-        "game/bin/godotmidi/libgdgodotmidi{}{}".format(env["suffix"], env["SHLIBSUFFIX"]),
+        "game/bin/godotmidi/libgdgodotmidi{}{}".format(
+            env["suffix"], env["SHLIBSUFFIX"]
+        ),
         source=sources,
     )
 
-Default(library)
+env.Append(CPPPATH=["thirdparty/"])
+
+sources += Glob("tests/*.cpp")
+
+tests = []
+# build executable for each cpp file
+# don't use glob as it returns a list of files not paths
+for source in os.listdir("tests/"):
+    if source.endswith(".cpp"):
+        name = source[:-4]
+        # set output directory to ./bin
+        print("Building test: " + source)
+        test = env.Program("tests/bin/" + name, sources)
+        tests.append(test)
+
+Default(library, tests)
