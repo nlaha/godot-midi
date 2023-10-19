@@ -2,15 +2,15 @@ extends Node3D
 
 @export var note_material : Material
 
-var mm
+var mp
 var notes = []
 
 var notes_on = {}
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	mm = get_node("../MidiManager")
-	mm.note_event.connect(on_note)
+	mp = $MidiPlayer
+	mp.note.connect(on_note)
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
@@ -31,9 +31,9 @@ func _process(delta):
 			notes.remove_at(notes.find(note))
 			note.queue_free()
 
-func on_note(note, data, type, track):
-	if (type == 0): # note on
+func on_note(event):
+	if (event['subtype'] == MIDI_MESSAGE_NOTE_ON): # note on
 		notes_on[note] = type
-	elif (type == 1): # note off
+	elif (type['subtype'] == MIDI_MESSAGE_NOTE_OFF): # note off
 		notes_on.erase(note)
 

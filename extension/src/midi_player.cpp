@@ -71,15 +71,14 @@ void MidiPlayer::_process(double delta)
                     args.append(event);
                     if (event.get("type", "undef") == "meta")
                     {
-                        this->meta_callback.callv(args);
-
+                        emit_signal("meta", args);
                     } else if (event.get("type", "undef") == "note")
                     {
-                        this->note_callback.callv(args);
+                        emit_signal("note", args);
 
                     } else if (event.get("type", "undef") == "system")
                     {
-                        this->note_callback.callv(args);
+                        emit_signal("system", args);
                     } else {
                         UtilityFunctions::printerr("[GodotMidi] Invalid event type");
                     }
