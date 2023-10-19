@@ -33,7 +33,7 @@ func _process(delta):
 
 func on_note(event):
 	if (event['subtype'] == MIDI_MESSAGE_NOTE_ON): # note on
-		notes_on[note] = type
+		notes_on[event['note']] = event
 	elif (type['subtype'] == MIDI_MESSAGE_NOTE_OFF): # note off
 		notes_on.erase(note)
 
