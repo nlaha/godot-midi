@@ -34,6 +34,7 @@ else:
 env.Append(CPPPATH=["thirdparty/"])
 
 sources += Glob("tests/*.cpp")
+env.Append(CXXFLAGS=["/DEBUG"])
 
 tests = []
 # build executable for each cpp file

@@ -1,11 +1,14 @@
-[gd_scene load_steps=4 format=3 uid="uid://cf5sqk6dd4esg"]
+[gd_scene load_steps=6 format=3 uid="uid://cf5sqk6dd4esg"]
 
+[ext_resource type="MidiResource" uid="uid://b7orc63h2n67b" path="res://mii_channel.mid" id="2_4tnyw"]
+[ext_resource type="AudioStream" uid="uid://c2p2hlfeyvhsk" path="res://mii_channel.ogg" id="3_5yg8d"]
 [ext_resource type="Script" path="res://addons/godot_midi/music_vis.gd" id="5_35bct"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wh3eh"]
-albedo_color = Color(0, 4, 0, 1)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_y1rli"]
+albedo_color = Color(0.584314, 0, 0.172549, 1)
 emission_enabled = true
-emission = Color(0, 2, 0, 1)
+emission = Color(0.819608, 0.0784314, 0, 1)
+emission_energy_multiplier = 6.58
 
 [sub_resource type="Environment" id="Environment_6map0"]
 background_mode = 1
@@ -13,6 +16,11 @@ ssao_enabled = true
 glow_enabled = true
 
 [node name="Main" type="Node"]
+script = ExtResource("5_35bct")
+note_material = SubResource("StandardMaterial3D_y1rli")
+
+[node name="MidiPlayer" type="MidiPlayer" parent="."]
+midi = ExtResource("2_4tnyw")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(-0.392767, 0.353553, -0.848961, 0.480471, 0.866026, 0.138372, 0.784144, -0.353553, -0.510018, -2, 2, 2)
@@ -22,8 +30,10 @@ transform = Transform3D(1, 0, 0, 0, 0.866026, 0.5, 0, -0.5, 0.866026, 0, 4, 5)
 
 [node name="CSGBox3D" type="CSGBox3D" parent="."]
 size = Vector3(18, 0.1, 1)
-script = ExtResource("5_35bct")
-note_material = SubResource("StandardMaterial3D_wh3eh")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_6map0")
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("3_5yg8d")
+autoplay = true

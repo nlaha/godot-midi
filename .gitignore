@@ -20,3 +20,5 @@ game/bin/godotmidi/*
 *.includes
 *.idb
 *.exp
+
+tests/bin/*

@@ -89,6 +89,7 @@ Error MidiResource::load_file(const String &p_path)
                 event_dict["text"] = meta_event.text;
                 event_dict["data"] = meta_event.data;
                 event_dict["channel"] = meta_event.channel;
+                event_dict["delta"] = delta_seconds;
 
                 // add event to track
                 Array event_array = this->tracks[trk_idx].get("events");

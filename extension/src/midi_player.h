@@ -12,7 +12,7 @@
 #include <godot_cpp/classes/ref.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/callable.hpp>
-#include <atomic>
+#include <godot_cpp/classes/engine.hpp>
 
 #include "midi_resource.h"
 
@@ -30,12 +30,11 @@ class MidiPlayer : public Node
     GDCLASS(MidiPlayer, Node);
 
 protected:
-
     static void _bind_methods()
     {
         ClassDB::bind_method(D_METHOD("set_midi", "midi"), &MidiPlayer::set_midi);
         ClassDB::bind_method(D_METHOD("get_midi"), &MidiPlayer::get_midi);
-        ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "midi"), "set_midi", "get_midi");
+        ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "midi", PROPERTY_HINT_RESOURCE_TYPE, "MidiResource"), "set_midi", "get_midi");
 
         ClassDB::bind_method(D_METHOD("play"), &MidiPlayer::play);
         ClassDB::bind_method(D_METHOD("stop"), &MidiPlayer::stop);
@@ -47,7 +46,7 @@ protected:
         ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_time"), "set_current_time", "get_current_time");
 
         ADD_SIGNAL(MethodInfo("finished"));
-        
+
         ADD_SIGNAL(MethodInfo("note"));
         ADD_SIGNAL(MethodInfo("meta"));
         ADD_SIGNAL(MethodInfo("system"));
@@ -56,12 +55,12 @@ protected:
 private:
     Ref<MidiResource> midi;
 
-    std::atomic<PlayerState> state;
+    PlayerState state;
     double current_time;
     Array track_index_offsets;
 
 public:
-    virtual void _process(double delta) override;
+    virtual void _physics_process(double delta) override;
 
     MidiPlayer();
     ~MidiPlayer();
@@ -85,9 +84,15 @@ public:
         this->current_time = current_time;
     };
 
-    void set_midi(Ref<MidiResource> midi)
+    void set_midi(const Ref<MidiResource> &midi)
     {
         this->midi = midi;
+        if (this->midi != NULL)
+        {
+            // initialize track_index_offsets
+            this->track_index_offsets.clear();
+            this->track_index_offsets.resize(this->midi->get_track_count());
+        }
     };
 
     Ref<MidiResource> get_midi()

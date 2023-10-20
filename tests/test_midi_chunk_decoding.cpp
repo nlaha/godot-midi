@@ -21,7 +21,7 @@ TEST_CASE("Test parsing of MIDI header chunks")
     };
 
     // load into byte array
-    PackedByteArray raw_midi_header_ba;
+    // PackedByteArray raw_midi_header_ba;
     // raw_midi_header_ba.resize(sizeof(raw_midi_header_bytes));
     // memcpy(raw_midi_header_ba.ptrw(), raw_midi_header_bytes, sizeof(raw_midi_header_bytes));
 
