@@ -18,14 +18,14 @@ sources = Glob("extension/src/*.cpp")
 
 if env["platform"] == "macos":
     library = env.SharedLibrary(
-        "game/bin/godotmidi/libgdgodotmidi.{}.{}.framework/libgdgodotmidi.{}.{}".format(
+        "game/addons/godot_midi/bin/libgdgodotmidi.{}.{}.framework/libgdgodotmidi.{}.{}".format(
             env["platform"], env["target"], env["platform"], env["target"]
         ),
         source=sources,
     )
 else:
     library = env.SharedLibrary(
-        "game/bin/godotmidi/libgdgodotmidi{}{}".format(
+        "game/addons/godot_midi/bin/libgdgodotmidi{}{}".format(
             env["suffix"], env["SHLIBSUFFIX"]
         ),
         source=sources,

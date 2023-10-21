@@ -1,0 +1,15 @@
+[configuration]
+
+entry_symbol = "godotmidi_library_init"
+compatibility_minimum = 4.1
+
+[libraries]
+
+linux.x86_64.debug = "res://addons/godot_midi/bin/libgdgodotmidi.linux.template_debug.x86_64.so"
+linux.x86_64.release = "res://addons/godot_midi/bin/libgdgodotmidi.linux.template_release.x86_64.so"
+linux.debug.arm64 = "res://addons/godot_midi/bin/libgdgodotmidi.linux.template_debug.arm64.so"
+linux.release.arm64 = "res://addons/godot_midi/bin/libgdgodotmidi.linux.template_release.arm64.so"
+windows.x86_64.debug = "res://addons/godot_midi/bin/libgdgodotmidi.windows.template_debug.x86_64.dll"
+windows.x86_64.release = "res://addons/godot_midi/bin/libgdgodotmidi.windows.template_release.x86_64.dll"
+macos.debug = "res://addons/godot_midi/bin/libgdgodotmidi.macos.template_debug.framework"
+macos.release = "res://addons/godot_midi/bin/libgdgodotmidi.macos.template_release.framework"
