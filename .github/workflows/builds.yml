@@ -1,61 +1,109 @@
-name: C/C++ CI
+name: Builds
 
-on:
-  workflow_dispatch:
+on: [workflow_dispatch]
+
+concurrency:
+  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-macos
+  cancel-in-progress: true
 
 jobs:
-  linux-x64:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - name: build-linux-editor-x64
-        run: |
-          git submodule update --init --recursive
-          pip3 install --user scons
-          scons target=template_release -j $(nproc)
-          scons target=template_debug -j $(nproc)
-      - uses: actions/upload-artifact@v2
-        with:
-          name: godotmidi-linux-${{ github.sha }}
-          if-no-files-found: error
-          path: |
-            ${{ github.workspace }}/game/addons/godot_midi
+  build:
+    runs-on: ${{matrix.os}}
+    name: ${{matrix.name}}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - identifier: windows-debug
+            os: windows-2019
+            name: 🏁 Windows Debug
+            target: template_debug
+            platform: windows
+            arch: x86_64
+          - identifier: windows-release
+            os: windows-2019
+            name: 🏁 Windows Release
+            target: template_release
+            platform: windows
+            arch: x86_64
+          - identifier: macos-debug
+            os: macos-latest
+            name: 🍎 macOS (universal) Debug
+            target: template_debug
+            platform: macos
+            arch: universal
+          - identifier: macos-release
+            os: macos-latest
+            name: 🍎 macOS (universal) Release
+            target: template_release
+            platform: macos
+            arch: universal
+          - identifier: linux-debug
+            os: ubuntu-22.04
+            name: 🐧 Linux Debug
+            runner: self-hosted
+            target: template_debug
+            platform: linux
+            arch: x86_64
+          - identifier: linux-release
+            os: ubuntu-22.04
+            name: 🐧 Linux Release
+            runner: self-hosted
+            target: template_release
+            platform: linux
+            arch: x86_64
 
-  windows-x64:
-    runs-on: windows-2019
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - name: Checkout project
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
           python-version: "3.x"
-          architecture: "x64"
-      - uses: ilammy/msvc-dev-cmd@v1
-      - name: build-windows-editor-x64
-        run: |
-          git submodule update --init --recursive
-          pip3 install --user scons
-          scons target=template_release -j $env:NUMBER_OF_PROCESSORS
-          scons target=template_debug -j $env:NUMBER_OF_PROCESSORS
-      - uses: actions/upload-artifact@v2
-        with:
-          name: godotmidi-windows-${{ github.sha }}
-          if-no-files-found: error
-          path: |
-            ${{ github.workspace }}/game/addons/godot_midi
 
-  macos-universal:
-    runs-on: macos-11
-    steps:
-      - uses: actions/checkout@v2
-      - name: build-macos-editor-universal
+      - name: Set up SCons
+        shell: bash
         run: |
-          git submodule update --init --recursive
-          brew install scons
-          scons target=template_debug macos_arch=universal use_llvm=yes macos_deployment_target=10.13 -j $(sysctl -n hw.logicalcpu)
-          scons target=template_release macos_arch=universal use_llvm=yes macos_deployment_target=10.13 -j $(sysctl -n hw.logicalcpu)
-      - uses: actions/upload-artifact@v2
+          python -c "import sys; print(sys.version)"
+          python -m pip install scons
+          scons --version
+
+      - name: Linux dependencies
+        if: ${{ matrix.platform == 'linux' }}
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qqq build-essential pkg-config
+
+      - name: Setup MinGW for Windows/MinGW build
+        if: ${{ matrix.platform == 'windows' }}
+        shell: sh
+        run: |
+          sudo apt-get install mingw-w64
+          sudo update-alternatives --set x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix
+          sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
+
+      - name: Compile godot-cpp
+        shell: sh
+        run: |
+          scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}'
+        working-directory: godot-cpp
+
+      - name: Compile Extension
+        shell: sh
+        run: |
+          scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}'
+
+      - name: Delete compilation files
+        if: ${{ matrix.platform == 'windows' }}
+        run: |
+          Remove-Item game/bin/godotmidi/* -Include *.exp,*.lib,*.pdb -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
         with:
-          name: godotmidi-macos-${{ github.sha }}
-          if-no-files-found: error
+          name: ${{ github.event.repository.name }}
           path: |
-            ${{ github.workspace }}/game/addons/godot_midi
+            ${{ github.workspace }}/game/bin/godotmidi/*
