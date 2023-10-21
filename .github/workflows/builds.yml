@@ -36,18 +36,6 @@ jobs:
             target: template_release
             platform: windows
             arch: x86_64
-          - identifier: macos-debug
-            os: macos-latest
-            name: 🍎 macOS (universal) Debug
-            target: template_debug
-            platform: macos
-            arch: universal
-          - identifier: macos-release
-            os: macos-latest
-            name: 🍎 macOS (universal) Release
-            target: template_release
-            platform: macos
-            arch: universal
 
     steps:
       - name: (Windows) Install mingw64
@@ -57,6 +45,22 @@ jobs:
           sudo apt-get install mingw-w64
           sudo update-alternatives --set x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix
           sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
+
+      - name: (Android) Set up Java 11
+        if: ${{ startsWith(matrix.identifier, 'android-') }}
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: (Android) Set up Android SDK
+        if: ${{ startsWith(matrix.identifier, 'android-') }}
+        uses: android-actions/setup-android@v2
+
+      - name: (Android) Install Android Tools
+        if: ${{ startsWith(matrix.identifier, 'android-') }}
+        shell: sh
+        run: |
+          "$ANDROID_SDK_ROOT"/cmdline-tools/latest/bin/sdkmanager --sdk_root="$ANDROID_SDK_ROOT" "platform-tools" "build-tools;30.0.3" "platforms;android-29" "cmdline-tools;latest" "cmake;3.10.2.4988404" "ndk;21.4.7075529"
 
       - name: Set up Python
         uses: actions/setup-python@v2
