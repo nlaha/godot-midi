@@ -1,28 +1,38 @@
-name: Builds
-
-on: [workflow_dispatch]
-
-concurrency:
-  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-macos
-  cancel-in-progress: true
+name: 🛠️ Builds
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ${{matrix.os}}
-    name: ${{matrix.name}}
+    runs-on: ${{ matrix.runner }}
+    name: ${{ matrix.name }}
     strategy:
       fail-fast: false
       matrix:
         include:
+          - identifier: linux-debug
+            name: Linux Debug
+            runner: ubuntu-20.04
+            target: template_debug
+            platform: linux
+            arch: x86_64
+          - identifier: linux-release
+            name: Linux Release
+            runner: ubuntu-20.04
+            target: template_release
+            platform: linux
+            arch: x86_64
           - identifier: windows-debug
-            os: windows-2019
-            name: 🏁 Windows Debug
+            name: Windows Debug
+            runner: ubuntu-20.04
             target: template_debug
             platform: windows
             arch: x86_64
           - identifier: windows-release
-            os: windows-2019
-            name: 🏁 Windows Release
+            name: Windows Release
+            runner: ubuntu-20.04
             target: template_release
             platform: windows
             arch: x86_64
@@ -38,31 +48,18 @@ jobs:
             target: template_release
             platform: macos
             arch: universal
-          - identifier: linux-debug
-            os: ubuntu-22.04
-            name: 🐧 Linux Debug
-            runner: self-hosted
-            target: template_debug
-            platform: linux
-            arch: x86_64
-          - identifier: linux-release
-            os: ubuntu-22.04
-            name: 🐧 Linux Release
-            runner: self-hosted
-            target: template_release
-            platform: linux
-            arch: x86_64
 
     steps:
-      - name: Checkout project
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
+      - name: (Windows) Install mingw64
+        if: ${{ startsWith(matrix.identifier, 'windows-') }}
+        shell: sh
+        run: |
+          sudo apt-get install mingw-w64
+          sudo update-alternatives --set x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix
+          sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
 
       - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.x"
+        uses: actions/setup-python@v2
 
       - name: Set up SCons
         shell: bash
@@ -71,35 +68,45 @@ jobs:
           python -m pip install scons
           scons --version
 
-      - name: Linux dependencies
-        if: ${{ matrix.platform == 'linux' }}
+      - name: Checkout project
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+#       TODO: Cache doesn't work yet. SCons rebuilds the objects even if they already exist. Could be caused by modification dates or extension_api.json.
+#             fetch-depth: 0 May be needed for cache. See: <https://github.com/actions/checkout/issues/468>.
+#      - name: Set up SCons cache
+#        uses: actions/cache@v3
+#        with:
+#          path: |
+#            ${{ github.workspace }}/.scons-cache/
+#            ${{ github.workspace }}/**/.sconsign.dblite
+#            ${{ github.workspace }}/godot-cpp/gen/
+#          key: ${{ matrix.identifier }}-${{ github.ref }}-${{ github.sha }}
+#          restore-keys: |
+#            ${{ matrix.identifier }}-${{ github.ref }}-${{ github.sha }}
+#            ${{ matrix.identifier }}-${{ github.ref }}
+#            ${{ matrix.identifier }}
+
+      - name: Compile extension
+        shell: sh
+#        env:
+#          SCONS_CACHE: '${{ github.workspace }}/.scons-cache/'
+#          SCONS_CACHE_LIMIT: 8192
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -qqq build-essential pkg-config
+          scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}' -j2
+          ls -l project/addons/*/bin/
 
-      - name: Setup MinGW for Windows/MinGW build
-        if: ${{ matrix.platform == 'windows' }}
-        uses: egor-tensin/setup-mingw@v2
-
-      - name: Compile godot-cpp
+      - name: Copy extra files to addon
         shell: sh
         run: |
-          scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}'
-        working-directory: godot-cpp
-
-      - name: Compile Extension
-        shell: sh
-        run: |
-          scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}'
-
-      - name: Delete compilation files
-        if: ${{ matrix.platform == 'windows' }}
-        run: |
-          Remove-Item game/bin/godotmidi/* -Include *.exp,*.lib,*.pdb -Force
+          for addon in ${{ github.workspace }}/project/addons/*/; do
+            cp --no-clobber '${{ github.workspace }}/README.md' '${{ github.workspace }}/LICENSE' "$addon"
+          done
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: ${{ github.event.repository.name }}
           path: |
-            ${{ github.workspace }}/game/bin/godotmidi/*
+            ${{ github.workspace }}/project/
