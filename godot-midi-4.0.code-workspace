@@ -74,7 +74,23 @@
       "xstring": "cpp",
       "xtr1common": "cpp",
       "xtree": "cpp",
-      "xutility": "cpp"
+      "xutility": "cpp",
+      "*.tcc": "cpp",
+      "condition_variable": "cpp",
+      "csignal": "cpp",
+      "cstdarg": "cpp",
+      "cwctype": "cpp",
+      "deque": "cpp",
+      "unordered_set": "cpp",
+      "functional": "cpp",
+      "memory_resource": "cpp",
+      "numeric": "cpp",
+      "random": "cpp",
+      "string_view": "cpp",
+      "fstream": "cpp",
+      "mutex": "cpp",
+      "numbers": "cpp",
+      "semaphore": "cpp"
     }
   }
 }

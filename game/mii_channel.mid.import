@@ -1,8 +1,8 @@
 [remap]
 
 importer="com.nlaha.godotmidi"
-type="Animation"
-uid="uid://bah5ep0b5ttnf"
+type="MidiResource"
+uid="uid://b7orc63h2n67b"
 path="res://.godot/imported/mii_channel.mid-65a1f1ae83fe8e619f2b937cc77ffd24.res"
 
 [deps]

@@ -1,14 +1,14 @@
 #include "register_types.h"
 
-#include "midi.h"
 #include "midi_parser.h"
+#include "midi_resource.h"
+#include "midi_player.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>
 #include <godot_cpp/classes/editor_import_plugin.hpp>
-#include <godot_cpp/godot.hpp>
 
 using namespace godot;
 
@@ -18,8 +18,9 @@ void initialize_godotmidi_types(ModuleInitializationLevel p_level)
 	{
 		return;
 	}
-	ClassDB::register_class<Midi>();
 	ClassDB::register_class<MidiParser>();
+	ClassDB::register_class<MidiResource>();
+	ClassDB::register_class<MidiPlayer>();
 }
 
 void uninitialize_godotmidi_types(ModuleInitializationLevel p_level)
@@ -37,7 +38,7 @@ extern "C"
 
 	GDExtensionBool GDE_EXPORT godotmidi_library_init(GDExtensionInterfaceGetProcAddress p_get_proc_address, const GDExtensionClassLibraryPtr p_library, GDExtensionInitialization *r_initialization)
 	{
-    	
+
 		godot::GDExtensionBinding::InitObject init_obj(p_get_proc_address, p_library, r_initialization);
 
 		init_obj.register_initializer(initialize_godotmidi_types);

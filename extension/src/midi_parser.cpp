@@ -297,7 +297,7 @@ bool MidiParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
         }
 
         // print event code
-        UtilityFunctions::print(String("EVENT: ") + String::num_int64(event_code));
+        // UtilityFunctions::print(String("EVENT: ") + String::num_int64(event_code));
 
         PackedByteArray event_data = raw.chunk_data.slice(offset - 1, raw.chunk_size);
 
@@ -398,9 +398,12 @@ bool MidiParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
         default:
         {
             // unknown event type
-            UtilityFunctions::print(String("Unknown event type"));
-            UtilityFunctions::print(Utility::print_bits(raw.chunk_data.slice(start_offset)));
-            // print delta time (parsed)
+            UtilityFunctions::print(String("Unknown event type: ") + String::num_int64(event_code));
+
+            // print length of data
+            UtilityFunctions::print(String("Length of data: ") + String::num_int64(event_data.size()));
+            // UtilityFunctions::print(Utility::print_bits(raw.chunk_data.slice(start_offset)));
+            //  print delta time (parsed)
             UtilityFunctions::print(String("Delta time: ") + String::num_int64(delta_time));
             // print bytes used for delta time
             UtilityFunctions::print(String("Bytes used for delta time: ") + String::num_int64(bytes_used));

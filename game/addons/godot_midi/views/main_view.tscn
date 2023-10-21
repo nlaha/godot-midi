@@ -1,0 +1,77 @@
+[gd_scene load_steps=3 format=3 uid="uid://y546h4wgl0xh"]
+
+[ext_resource type="Script" path="res://addons/godot_midi/views/main_view.gd" id="1_xrphq"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dvsqh"]
+bg_color = Color(0.137255, 0.137255, 0.137255, 1)
+
+[node name="main_view" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_xrphq")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="HSplitContainer" type="HSplitContainer" parent="MarginContainer"]
+layout_mode = 2
+split_offset = 256
+
+[node name="Panel" type="Panel" parent="MarginContainer/HSplitContainer"]
+custom_minimum_size = Vector2(256, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_dvsqh")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HSplitContainer/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="LoadMidiFileBtn" type="Button" parent="MarginContainer/HSplitContainer/Panel/VBoxContainer"]
+layout_mode = 2
+text = "Load MIDI Resource"
+
+[node name="MidiFileInfo" type="RichTextLabel" parent="MarginContainer/HSplitContainer/Panel/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 128)
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 12
+text = "No MIDI file loaded..."
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/HSplitContainer"]
+layout_mode = 2
+
+[node name="Tracks" type="VBoxContainer" parent="MarginContainer/HSplitContainer/ScrollContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="MidiFileOpenDialogue" type="FileDialog" parent="."]
+title = "Open a File"
+initial_position = 2
+size = Vector2i(557, 352)
+ok_button_text = "Open"
+file_mode = 0
+filters = PackedStringArray("*.mid", "*.midi")
+
+[connection signal="pressed" from="MarginContainer/HSplitContainer/Panel/VBoxContainer/LoadMidiFileBtn" to="." method="_on_load_midi_file_btn_pressed"]
+[connection signal="file_selected" from="MidiFileOpenDialogue" to="." method="_on_midi_file_open_dialogue_file_selected"]

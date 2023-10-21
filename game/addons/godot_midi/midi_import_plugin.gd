@@ -16,7 +16,7 @@ func _get_save_extension():
 	return "res"
 
 func _get_resource_type():
-	return "Animation"
+	return "MidiResource"
 
 func _get_preset_count():
 	return Presets.size()
@@ -48,11 +48,14 @@ func _get_import_order():
 	return 0
 
 func _import(source_file, save_path, options, r_platform_variants, r_gen_files):
-	var midi = Midi.new();
-	var global_file = ProjectSettings.globalize_path(source_file)
 
-	var save_file = "%s.%s" % [save_path, _get_save_extension()]
-	print("Importing with only_notes: " + "yes" if options.only_notes else "no")
-	midi.load_from_file(global_file, save_file, options.only_notes)
-	
-	return OK
+	print("[GodotMidi] Importing midi file: " + source_file)
+	print("[GodotMidi] Importing with only_notes: " + String("yes" if options.only_notes else "no"))
+
+	var save_file = save_path + "." + _get_save_extension()
+	var midi_resource = MidiResource.new()
+	if midi_resource.load_file(source_file) != OK:
+		printerr("[GodotMidi] Failed to load midi file: " + source_file)
+		return FAILED
+
+	return ResourceSaver.save(midi_resource, save_file)

@@ -18,6 +18,7 @@
 
 using namespace godot;
 
+/// @brief MidiParser class, contains various classes and functions for parsing midi files
 class MidiParser : public RefCounted
 {
     GDCLASS(MidiParser, RefCounted);
@@ -45,7 +46,6 @@ public:
         {
             chunk_id = "";
             chunk_size = 0;
-            chunk_data = PackedByteArray();
             chunk_type = MidiChunkType::Unknown;
         };
 
@@ -117,14 +117,14 @@ public:
     public:
         enum NoteType
         {
-            NoteOn,
-            NoteOff,
-            Aftertouch,
-            Controller,
-            ProgramChange,
-            ChannelPressure,
-            PitchBend,
-            Unknown
+            NoteOn = 0x09,
+            NoteOff = 0x08,
+            Aftertouch = 0x0A,
+            Controller = 0x0B,
+            ProgramChange = 0x0C,
+            ChannelPressure = 0x0D,
+            PitchBend = 0x0E,
+            Unknown = 0xFF
         };
 
         uint8_t note;
