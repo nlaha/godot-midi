@@ -8,8 +8,6 @@ This plugin aims to make rythm game development and music syncing easier than ev
 
 This is a GDExtension addon and is only compatible with Godot version 4.1.2 and higher.
 
-https://user-images.githubusercontent.com/10292944/212436300-37939dc6-e345-4300-8543-a16e4a451f3f.mp4
-
 ## Installation
 
 1. Download the latest release over at https://github.com/nlaha/godot-midi-4.0/releases
@@ -24,7 +22,11 @@ https://user-images.githubusercontent.com/10292944/212436300-37939dc6-e345-4300-
 
 2. Add a "MidiPlayer" node to your scene
 
-3. Set the midi resource you want the MidiPlayer to play
+![image](https://github.com/nlaha/godot-midi-4.0/assets/10292944/30c15ea4-ae06-4baf-8248-c995b0a2dc2f)
+
+4. Set the midi resource you want the MidiPlayer to play
+
+![image](https://github.com/nlaha/godot-midi-4.0/assets/10292944/7e2e019e-290b-4580-b2ca-4506263f14c0)
 
 4. Connect to the "note" signal in a GDScript
 
