@@ -15,6 +15,7 @@
 
 using namespace godot;
 
+/// @brief MidiResource class, responsible for loading and parsing a midi file, then storing it in a format that can be played back
 class MidiResource : public Resource
 {
     GDCLASS(MidiResource, Resource);

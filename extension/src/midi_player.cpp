@@ -56,24 +56,26 @@ void MidiPlayer::_physics_process(double delta)
                     has_more_events = true;
                 }
 
-                // search a few events forward in time
-                for (size_t j = index_off; j < events.size() / 100; j++)
+                // search forward in time
+                for (size_t j = index_off; j < events.size(); j++)
                 {
                     Dictionary event = events[j];
                     double event_time = event.get("time", 0);
 
-                    if (event_time - this->current_time < delta)
+                    if (this->current_time >= event_time)
                     {
                         this->track_index_offsets[i] = j;
-                        if (event.get("type", "undef") == "meta")
+                        String event_type = event.get("type", "undef");
+
+                        if (event_type == "meta")
                         {
                             emit_signal("meta", event, i);
                         }
-                        else if (event.get("type", "undef") == "note")
+                        else if (event_type == "note")
                         {
                             emit_signal("note", event, i);
                         }
-                        else if (event.get("type", "undef") == "system")
+                        else if (event_type == "system")
                         {
                             emit_signal("system", event, i);
                         }
@@ -81,6 +83,11 @@ void MidiPlayer::_physics_process(double delta)
                         {
                             UtilityFunctions::printerr("[GodotMidi] Invalid event type");
                         }
+                    }
+                    else
+                    {
+                        // we've gone too far, break
+                        break;
                     }
                 }
             }

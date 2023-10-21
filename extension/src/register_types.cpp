@@ -1,6 +1,5 @@
 #include "register_types.h"
 
-#include "midi.h"
 #include "midi_parser.h"
 #include "midi_resource.h"
 #include "midi_player.h"
@@ -19,7 +18,6 @@ void initialize_godotmidi_types(ModuleInitializationLevel p_level)
 	{
 		return;
 	}
-	ClassDB::register_class<Midi>();
 	ClassDB::register_class<MidiParser>();
 	ClassDB::register_class<MidiResource>();
 	ClassDB::register_class<MidiPlayer>();

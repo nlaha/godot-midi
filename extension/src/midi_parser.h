@@ -18,6 +18,7 @@
 
 using namespace godot;
 
+/// @brief MidiParser class, contains various classes and functions for parsing midi files
 class MidiParser : public RefCounted
 {
     GDCLASS(MidiParser, RefCounted);

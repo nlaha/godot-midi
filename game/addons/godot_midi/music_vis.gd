@@ -15,6 +15,7 @@ func _ready():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
+	# spawn notes
 	for note in notes_on:
 		# spawn a cube
 		var box = MeshInstance3D.new()
@@ -26,15 +27,17 @@ func _process(delta):
 		box.position.x = remap(note, 0, 127, -10, 10)
 		notes.append(box)
 		
+	# remove notes when they go off screen
 	for note in notes:
 		note.position.y += delta
 		if note.position.y > 20:
 			notes.remove_at(notes.find(note))
 			note.queue_free()
 
+# Called when a "note" type event is played
 func on_note(event, track):
 	if (event['subtype'] == MIDI_MESSAGE_NOTE_ON): # note on
 		notes_on[event['note']] = event
 	elif (event['subtype'] == MIDI_MESSAGE_NOTE_OFF): # note off
 		notes_on.erase(event['note'])
-	print("[Track: " + str(track) + "] Note on: " + str(event['note']))
+	#print("[Track: " + str(track) + "] Note on: " + str(event['note']))

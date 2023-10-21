@@ -25,6 +25,7 @@ enum PlayerState
     Stopped
 };
 
+/// @brief MidiPlayer class, responsible for playing back a MidiResource in real-time
 class MidiPlayer : public Node
 {
     GDCLASS(MidiPlayer, Node);
