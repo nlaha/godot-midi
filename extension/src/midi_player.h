@@ -61,7 +61,7 @@ private:
     Array track_index_offsets;
 
 public:
-    virtual void _physics_process(double delta) override;
+    virtual void _process(double delta) override;
 
     MidiPlayer();
     ~MidiPlayer();

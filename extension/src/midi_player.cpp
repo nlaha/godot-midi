@@ -4,6 +4,8 @@ MidiPlayer::MidiPlayer()
 {
     // initialize variables
     this->current_time = 0;
+
+    set_process_thread_group(ProcessThreadGroup::PROCESS_THREAD_GROUP_SUB_THREAD);
 }
 
 MidiPlayer::~MidiPlayer()
@@ -34,7 +36,7 @@ void MidiPlayer::pause()
 }
 
 /// @brief Internal playback function
-void MidiPlayer::_physics_process(double delta)
+void MidiPlayer::_process(double delta)
 {
     if (!Engine::get_singleton()->is_editor_hint())
     {
