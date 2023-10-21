@@ -4,6 +4,8 @@
 
 This plugin aims to make rythm game development and music syncing easier than ever before. Simply import a midi file like you would any other godot asset, this can then be paired with a "MidiPlayer" node that sends out signals every time a midi event is fired. This project is a work in progress and is lacking some features, so feel free to contribute any code or ideas over on the pull requests page.
 
+https://github.com/nlaha/godot-midi-4.0/assets/10292944/85e1444e-3503-4e44-a62a-c7efc8025ddc
+
 ## Compatibility
 
 This is a GDExtension addon and is only compatible with Godot version 4.1.2 and higher.
