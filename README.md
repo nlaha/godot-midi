@@ -12,11 +12,13 @@ This is a GDExtension addon and is only compatible with Godot version 4.1.2 and 
 
 ## Installation
 
-1. Download the latest release over at https://github.com/nlaha/godot-midi-4.0/releases
+1. Clone the repository with `git clone --recursive https://github.com/nlaha/godot-midi.git`
 
-2. Extract it to your `res://` folder such that both addons and bin are in the root of your project
+2. Make sure you have SCons installed and run `scons target=template_debug` or `scons target=template_release` in the root directory
 
-3. Enable the plugin in the godot project settings menu
+3. Copy the `game/addons/godot_midi` folder to your project's addons folder
+
+4. Enable the plugin in the Godot project settings menu
 
 ## Usage
 
