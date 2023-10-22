@@ -8,7 +8,7 @@ bg_color = Color(0.0588235, 0.0588235, 0.0588235, 1)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_4hed8"]
 shader = ExtResource("2_m3vsd")
-shader_parameter/scale = Vector2(943.66, 33)
+shader_parameter/scale = Vector2(470.565, 24)
 shader_parameter/color1 = Color(0.0901961, 0.0901961, 0.0901961, 0)
 shader_parameter/color2 = Color(0.0509804, 0.0509804, 0.0509804, 1)
 

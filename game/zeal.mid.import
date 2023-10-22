@@ -1,0 +1,15 @@
+[remap]
+
+importer="com.nlaha.godotmidi"
+type="MidiResource"
+uid="uid://bwk6t11415q6n"
+path="res://.godot/imported/zeal.mid-c2e1a4e743859c61aef9a8e99052386a.res"
+
+[deps]
+
+source_file="res://zeal.mid"
+dest_files=["res://.godot/imported/zeal.mid-c2e1a4e743859c61aef9a8e99052386a.res"]
+
+[params]
+
+only_notes=false
