@@ -2,23 +2,37 @@
 
 ## Overview
 
-This plugin aims to make rythm game development and music syncing easier than ever before. Simply import a midi file like you would any other godot asset, this can then be paired with a "MidiPlayer" node that sends out signals every time a midi event is fired. This project is a work in progress and is lacking some features, so feel free to contribute any code or ideas over on the pull requests page.
+This plugin aims to make rhythm game development and music syncing easier than ever before. Import a midi file like you would any other Godot asset, this can then be paired with a "MidiPlayer" node that sends out signals every time a midi event is fired. This project is a work in progress and lacks some features, so feel free to contribute any code or ideas on the pull requests page.
 
 https://github.com/nlaha/godot-midi-4.0/assets/10292944/85e1444e-3503-4e44-a62a-c7efc8025ddc
 
 ## Compatibility
 
-This is a GDExtension addon and is only compatible with Godot version 4.1.2 and higher.
+This GDExtension addon is only compatible with Godot version 4.1.2 and higher.
 
-## Installation
+## Installation from binaries
+
+Note, due to https://github.com/nlaha/godot-midi/issues/11, binaries for MacOS are currently unavailable, please build from source.
+
+1. Download the latest release from https://github.com/nlaha/godot-midi/releases
+
+2. Copy the `godot-midi` folder to your project's `addons` folder
+   
+4. Enable the addon in Godot's project settings
+
+## Building from source
 
 1. Clone the repository with `git clone --recursive https://github.com/nlaha/godot-midi.git`
 
-2. Make sure you have SCons installed and run `scons target=template_debug` or `scons target=template_release` in the root directory
+2. Make sure you have SCons installed
 
-3. Copy the `game/addons/godot_midi` folder to your project's addons folder
+3. Run `cd godot-cpp` and `scons target=template_debug` or `scons target=template_release` to build godot-cpp
 
-4. Enable the plugin in the Godot project settings menu
+4. Run `scons target=template_debug` or `scons target=template_release` in the root directory to build the extension
+
+5. Copy the `game/addons/godot_midi` folder to your project's addons folder
+
+6. Enable the plugin in the Godot project settings menu
 
 ## Usage
 
