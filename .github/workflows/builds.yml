@@ -79,9 +79,7 @@ jobs:
 
       - name: Setup MinGW for Windows/MinGW build
         if: ${{ matrix.platform == 'windows' }}
-        uses: egor-tensin/setup-mingw@v2
-        with:
-          platform: x64
+        uses: msys2/setup-msys2@v2
 
       - name: Compile godot-cpp
         shell: sh
