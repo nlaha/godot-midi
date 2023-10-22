@@ -79,11 +79,7 @@ jobs:
 
       - name: Setup MinGW for Windows/MinGW build
         if: ${{ matrix.platform == 'windows' }}
-        shell: sh
-        run: |
-          sudo apt-get install mingw-w64
-          sudo update-alternatives --set x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix
-          sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
+        uses: msys2/setup-msys2@v2
 
       - name: Compile godot-cpp
         shell: sh
@@ -99,11 +95,11 @@ jobs:
       - name: Delete compilation files
         if: ${{ matrix.platform == 'windows' }}
         run: |
-          Remove-Item game/bin/godotmidi/* -Include *.exp,*.lib,*.pdb -Force
+          Remove-Item game/addons/godot_midi/bin/* -Include *.exp,*.lib,*.pdb -Force
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: ${{ github.event.repository.name }}
           path: |
-            ${{ github.workspace }}/game/bin/godotmidi/*
+            ${{ github.workspace }}/game/addons/*
