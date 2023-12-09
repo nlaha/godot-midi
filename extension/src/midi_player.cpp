@@ -5,7 +5,7 @@ MidiPlayer::MidiPlayer()
     // initialize variables
     this->current_time = 0;
 
-    set_process_thread_group(ProcessThreadGroup::PROCESS_THREAD_GROUP_SUB_THREAD);
+    set_process_thread_group(ProcessThreadGroup::PROCESS_THREAD_GROUP_MAIN_THREAD);
 }
 
 MidiPlayer::~MidiPlayer()
@@ -51,6 +51,7 @@ void MidiPlayer::_process(double delta)
 
                 // starting at index offset, check if there's an event at the current time
                 int index_off = this->track_index_offsets[i];
+                index_off++;
 
                 // if we have more events, don't stop yet
                 if (events.size() - 1 > index_off)
@@ -96,8 +97,12 @@ void MidiPlayer::_process(double delta)
 
             if (has_more_events == false)
             {
-                // loop by default
-                // TODO: add loop property
+                if (this->loop == false)
+                {
+                    this->state = PlayerState::Stopped;
+                    UtilityFunctions::print("[GodotMidi] Finished, stopping");
+                    return;
+                }
                 this->current_time = 0;
                 this->track_index_offsets.clear();
                 this->track_index_offsets.resize(this->midi->get_track_count());

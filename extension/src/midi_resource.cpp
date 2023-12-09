@@ -84,6 +84,7 @@ Error MidiResource::load_file(const String &p_path)
                 // load meta event into current track
                 Dictionary event_dict;
                 event_dict["type"] = "meta";
+                event_dict["track"] = trk_idx;
                 event_dict["subtype"] = meta_event.event_type;
                 event_dict["time"] = time;
                 event_dict["text"] = meta_event.text;
@@ -116,6 +117,7 @@ Error MidiResource::load_file(const String &p_path)
                 // load note event into current track
                 Dictionary event_dict;
                 event_dict["type"] = "note";
+                event_dict["track"] = trk_idx;
                 event_dict["subtype"] = note_event.event_type;
                 event_dict["time"] = time;
                 event_dict["note"] = note_event.note;
@@ -141,6 +143,7 @@ Error MidiResource::load_file(const String &p_path)
                 // load system event into current track
                 Dictionary event_dict;
                 event_dict["type"] = "system";
+                event_dict["track"] = trk_idx;
                 event_dict["subtype"] = system_event.event_type;
                 event_dict["time"] = time;
                 event_dict["channel"] = system_event.channel;

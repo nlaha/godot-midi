@@ -46,6 +46,10 @@ protected:
         ClassDB::bind_method(D_METHOD("set_current_time", "current_time"), &MidiPlayer::set_current_time);
         ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_time"), "set_current_time", "get_current_time");
 
+        ClassDB::bind_method(D_METHOD("get_loop"), &MidiPlayer::get_loop);
+        ClassDB::bind_method(D_METHOD("set_loop", "loop"), &MidiPlayer::set_loop);
+        ADD_PROPERTY(PropertyInfo(Variant::BOOL, "loop"), "set_loop", "get_loop");
+
         ADD_SIGNAL(MethodInfo("finished"));
 
         ADD_SIGNAL(MethodInfo("note"));
@@ -59,6 +63,7 @@ private:
     PlayerState state;
     double current_time;
     Array track_index_offsets;
+    bool loop;
 
 public:
     virtual void _process(double delta) override;
@@ -70,6 +75,11 @@ public:
     void stop();
     void pause();
 
+    bool get_loop()
+    {
+        return this->loop;
+    };
+
     int get_state()
     {
         return (int)this->state;
@@ -78,6 +88,11 @@ public:
     double get_current_time()
     {
         return this->current_time;
+    };
+
+    void set_loop(bool loop)
+    {
+        this->loop = loop;
     };
 
     void set_current_time(double current_time)
