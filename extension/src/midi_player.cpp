@@ -38,6 +38,20 @@ void MidiPlayer::pause()
 /// @brief Internal playback function
 void MidiPlayer::_process(double delta)
 {
+    if (this->manual_process == false)
+    {
+        process_delta(delta);
+    }
+}
+
+void MidiPlayer::process_delta(double delta)
+{
+    if (this->midi == NULL)
+    {
+        UtilityFunctions::printerr("[GodotMidi] No midi resource set");
+        return;
+    }
+
     if (!Engine::get_singleton()->is_editor_hint())
     {
         if (this->state == PlayerState::Playing)

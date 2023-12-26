@@ -50,6 +50,12 @@ protected:
         ClassDB::bind_method(D_METHOD("set_loop", "loop"), &MidiPlayer::set_loop);
         ADD_PROPERTY(PropertyInfo(Variant::BOOL, "loop"), "set_loop", "get_loop");
 
+        ClassDB::bind_method(D_METHOD("get_manual_process"), &MidiPlayer::get_manual_process);
+        ClassDB::bind_method(D_METHOD("set_manual_process", "manual_process"), &MidiPlayer::set_manual_process);
+        ADD_PROPERTY(PropertyInfo(Variant::BOOL, "manual_process"), "set_manual_process", "get_manual_process");
+        
+        ClassDB::bind_method(D_METHOD("process_delta", "delta"), &MidiPlayer::process_delta);
+
         ADD_SIGNAL(MethodInfo("finished"));
 
         ADD_SIGNAL(MethodInfo("note"));
@@ -64,9 +70,11 @@ private:
     double current_time;
     Array track_index_offsets;
     bool loop;
+    bool manual_process;
 
 public:
     virtual void _process(double delta) override;
+    void process_delta(double delta);
 
     MidiPlayer();
     ~MidiPlayer();
@@ -74,6 +82,11 @@ public:
     void play();
     void stop();
     void pause();
+
+    bool get_manual_process()
+    {
+        return this->manual_process;
+    };
 
     bool get_loop()
     {
@@ -88,6 +101,11 @@ public:
     double get_current_time()
     {
         return this->current_time;
+    };
+
+    void set_manual_process(bool manual_process)
+    {
+        this->manual_process = manual_process;
     };
 
     void set_loop(bool loop)
