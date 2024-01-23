@@ -2,8 +2,8 @@
 
 [ext_resource type="Script" path="res://music_vis.gd" id="1_7bol8"]
 [ext_resource type="Shader" path="res://note_vis_shader.gdshader" id="2_uwn88"]
-[ext_resource type="MidiResource" uid="uid://b7orc63h2n67b" path="res://mii_channel.mid" id="3_hmfnq"]
-[ext_resource type="AudioStream" uid="uid://c2p2hlfeyvhsk" path="res://mii_channel.ogg" id="4_pljbq"]
+[ext_resource type="AudioStream" uid="uid://bib56neltjbos" path="res://zeal.ogg" id="3_8807r"]
+[ext_resource type="MidiResource" uid="uid://bwk6t11415q6n" path="res://zeal.mid" id="3_l8227"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_2soq2"]
 render_priority = 0
@@ -63,7 +63,7 @@ script = ExtResource("1_7bol8")
 note_materials = Array[Material]([SubResource("ShaderMaterial_2soq2"), SubResource("ShaderMaterial_33vtw"), SubResource("ShaderMaterial_jh5ke"), SubResource("ShaderMaterial_4arlw"), SubResource("ShaderMaterial_wg5fx"), SubResource("ShaderMaterial_gw6ig"), SubResource("ShaderMaterial_utwia"), SubResource("ShaderMaterial_grq4g")])
 
 [node name="MidiPlayer" type="MidiPlayer" parent="."]
-midi = ExtResource("3_hmfnq")
+midi = ExtResource("3_l8227")
 process_thread_group = 0
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
@@ -80,6 +80,6 @@ size = Vector3(18, 0.1, 1)
 environment = SubResource("Environment_6map0")
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("4_pljbq")
+stream = ExtResource("3_8807r")
 volume_db = -10.0
 autoplay = true
