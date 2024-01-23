@@ -5,7 +5,7 @@ extends Node
 var notes = []
 var notes_on = {}
 
-var midi_player: MidiPlayer
+var midi_player: MidiPlayer;
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
