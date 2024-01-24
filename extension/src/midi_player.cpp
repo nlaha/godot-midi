@@ -58,7 +58,7 @@ void MidiPlayer::process_delta(double delta)
         {
             // process each track
             bool has_more_events = false;
-            for (size_t i = 0; i < this->midi->get_track_count(); i++)
+            for (uint64_t i = 0; i < this->midi->get_track_count(); i++)
             {
                 // get events for this track
                 Array events = this->midi->get_tracks()[i].get("events");
@@ -74,7 +74,7 @@ void MidiPlayer::process_delta(double delta)
                 }
 
                 // search forward in time
-                for (size_t j = index_off; j < events.size(); j++)
+                for (uint64_t j = index_off; j < events.size(); j++)
                 {
                     Dictionary event = events[j];
                     double event_time = event.get("time", 0);

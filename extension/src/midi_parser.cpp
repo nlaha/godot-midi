@@ -253,6 +253,11 @@ void MidiParser::MidiTrackChunk::IngestMetaEvent(MidiEventMeta &meta_event, Midi
         // set end of track flag
         header.end_of_track = true;
     }
+    default:
+    {
+        // unknown meta event
+        break;
+    }
     }
 }
 

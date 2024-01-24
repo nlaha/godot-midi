@@ -99,6 +99,7 @@ public:
         int32_t channel;
         int32_t delta_time;
 
+        virtual ~MidiEvent() = default;
         MidiEvent(int32_t channel, int32_t delta_time);
         MidiEvent(const MidiEvent &other);
 
