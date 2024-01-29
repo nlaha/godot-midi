@@ -188,6 +188,9 @@ public:
             Lyric = 0x05,
             Marker = 0x06,
             CuePoint = 0x07,
+            ProgramName = 0x08,
+            DeviceName = 0x09,
+            ArtistName = 0x0A, // note, this isn't in the spec
             EndOfTrack = 0x2F,
             SetTempo = 0x51,
             SMPTEOffset = 0x54,
@@ -225,6 +228,11 @@ public:
             int32_t clocks_per_tick;
             int32_t num_32nd_notes_per_quarter;
         };
+        struct MidiKeySignature
+        {
+            int32_t sharps_flats;
+            int32_t major_minor;
+        };
 
         enum MidiEventType
         {
@@ -239,6 +247,7 @@ public:
         std::vector<std::unique_ptr<MidiEvent>> events;
 
         MidiTimeSignature time_signature;
+        MidiKeySignature key_signature;
 
         MidiTrackChunk()
         {

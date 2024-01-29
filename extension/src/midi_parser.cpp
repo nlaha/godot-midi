@@ -161,6 +161,11 @@ MidiParser::MidiEventNote::MidiEventNote(int32_t channel, int32_t delta_time, Pa
     else
     {
         // unknown/invalid event type
+        // let's assume it's some weird controller event and set the bytes used to 2
+        this->channel = channel;
+        this->note = data[1];
+        this->data = data[2];
+        this->bytes_used = 2;
     }
 }
 
@@ -192,6 +197,9 @@ MidiParser::MidiEventMeta::MidiEventMeta(int32_t delta_time, PackedByteArray dat
     }
 
     bytes_used = event_data_length + bytes_used + 1;
+    // UtilityFunctions::print(String("NEW META EVENT: "));
+    // UtilityFunctions::print(String("Event type: ") + String::num_int64(event_type));
+    // UtilityFunctions::print(String("Bytes used: ") + String::num_int64(bytes_used));
 }
 
 /// @brief Parses the different meta event types
@@ -201,7 +209,16 @@ void MidiParser::MidiTrackChunk::IngestMetaEvent(MidiEventMeta &meta_event, Midi
 {
     // text events
     if (
-        meta_event.event_type == MidiEventMeta::MidiMetaEventType::TextEvent || meta_event.event_type == MidiEventMeta::MidiMetaEventType::CopyRightNotice || meta_event.event_type == MidiEventMeta::MidiMetaEventType::SequenceOrTrackName || meta_event.event_type == MidiEventMeta::MidiMetaEventType::InstrumentName || meta_event.event_type == MidiEventMeta::MidiMetaEventType::Lyric || meta_event.event_type == MidiEventMeta::MidiMetaEventType::Marker || meta_event.event_type == MidiEventMeta::MidiMetaEventType::CuePoint)
+        meta_event.event_type == MidiEventMeta::MidiMetaEventType::TextEvent ||
+        meta_event.event_type == MidiEventMeta::MidiMetaEventType::CopyRightNotice ||
+        meta_event.event_type == MidiEventMeta::MidiMetaEventType::SequenceOrTrackName ||
+        meta_event.event_type == MidiEventMeta::MidiMetaEventType::InstrumentName ||
+        meta_event.event_type == MidiEventMeta::MidiMetaEventType::Lyric ||
+        meta_event.event_type == MidiEventMeta::MidiMetaEventType::Marker ||
+        meta_event.event_type == MidiEventMeta::MidiMetaEventType::CuePoint ||
+        meta_event.event_type == MidiEventMeta::MidiMetaEventType::ProgramName ||
+        meta_event.event_type == MidiEventMeta::MidiMetaEventType::DeviceName ||
+        meta_event.event_type == MidiEventMeta::MidiMetaEventType::ArtistName)
     {
         // marker
         // variable length
@@ -245,6 +262,22 @@ void MidiParser::MidiTrackChunk::IngestMetaEvent(MidiEventMeta &meta_event, Midi
         this->time_signature = time_signature;
         break;
     }
+    case MidiEventMeta::MidiMetaEventType::KeySignature:
+    {
+        // key signature
+        // 2 bytes
+        // first byte is always 0x02
+        // the rest of the bytes are the key signature
+        // the first byte is the number of flats (-ve) or sharps (+ve)
+        // the second byte is the major (0) or minor (1) key
+
+        // set key signature of the track
+        MidiKeySignature key_signature = MidiKeySignature();
+        key_signature.sharps_flats = meta_event.data[0];
+        key_signature.major_minor = meta_event.data[1];
+        this->key_signature = key_signature;
+        break;
+    }
     case MidiEventMeta::MidiMetaEventType::EndOfTrack:
     {
         // end of track
@@ -281,9 +314,9 @@ bool MidiParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
             break;
 
         int32_t bytes_used = 0;
+
         // first variable length quantity is delta time
         int32_t delta_time = Utility::decode_varint_be(raw.chunk_data, offset, bytes_used);
-        int start_offset = offset;
         offset += bytes_used;
 
         // next byte is the event type | channel
@@ -404,14 +437,10 @@ bool MidiParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
         {
             // unknown event type
             UtilityFunctions::print(String("Unknown event type: ") + String::num_int64(event_code));
-
-            // print length of data
-            UtilityFunctions::print(String("Length of data: ") + String::num_int64(event_data.size()));
-            // UtilityFunctions::print(Utility::print_bits(raw.chunk_data.slice(start_offset)));
+            // print data as hex
+            UtilityFunctions::print(event_data.slice(0, 10).hex_encode() + String("..."));
             //  print delta time (parsed)
             UtilityFunctions::print(String("Delta time: ") + String::num_int64(delta_time));
-            // print bytes used for delta time
-            UtilityFunctions::print(String("Bytes used for delta time: ") + String::num_int64(bytes_used));
         }
         }
     }
