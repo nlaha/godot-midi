@@ -1,4 +1,4 @@
-# Godot Midi
+![banner_logo_long](https://github.com/nlaha/godot-midi/assets/10292944/4e5b5125-0453-4f92-9ac7-048cfb2c8067)
 
 ## Overview
 
