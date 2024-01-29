@@ -1,6 +1,5 @@
 # Godot 4+ specific ignores
 .godot/
-game/addons/godot_midi/bin/*
 .sconsign*.dblite
 
 # Binaries
