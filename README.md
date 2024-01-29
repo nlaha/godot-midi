@@ -67,7 +67,7 @@ This GDExtension addon is only compatible with Godot version 4.1.2 and higher.
 
 ## Manual Process
 
-Godot Midi supports two sync modes, automatic process and manual process. The example above shows automatic process, this is great for use cases where you don't need to sync midi playback with an audio player or a game system. However, in rhythm games and other time-sensitive projects, it's recommended you use manual process. Manual process allows you to "tick" the midi player with an arbitrary delta time value. Below is an example of manual process being used to sync an audio stream player
+Godot Midi supports two sync modes, **automatic process** and **manual process**. The example above shows automatic process, this is great for use cases where you don't need to sync midi playback with an audio player or a game system. However, in rhythm games and other time-sensitive projects, it's recommended you use manual process. Manual process allows you to "tick" the midi player with an arbitrary delta time value. Below is an example of manual process being used to sync an audio stream player
 
 ```gdscript
    func _ready():
