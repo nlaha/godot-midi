@@ -12,8 +12,6 @@ This GDExtension addon is only compatible with Godot version 4.1.2 and higher.
 
 ## Installation from binaries
 
-Note, due to https://github.com/nlaha/godot-midi/issues/11, binaries for MacOS are currently unavailable, please build from source.
-
 1. Download the latest release from https://github.com/nlaha/godot-midi/releases
 
 2. Copy the `godot-midi` folder to your project's `addons` folder
@@ -38,7 +36,9 @@ Note, due to https://github.com/nlaha/godot-midi/issues/11, binaries for MacOS a
 
 1. Import a midi file by adding it to your project folder
 
-2. Add a "MidiPlayer" node to your scene
+> **NOTE:** If you run into import errors or problems with a midi file you downloaded from the internet, it's likely there is a midi event or format that isn't supported by Godot Midi. The best way to fix this is to import the midi file into a DAW (digital audio workstation) or similar software and re-export it. This should convert the midi file into a format easily readable by Godot Midi.
+
+3. Add a "MidiPlayer" node to your scene
 
 ![image](https://github.com/nlaha/godot-midi-4.0/assets/10292944/30c15ea4-ae06-4baf-8248-c995b0a2dc2f)
 
@@ -51,18 +51,52 @@ Note, due to https://github.com/nlaha/godot-midi/issues/11, binaries for MacOS a
    ```gdscript
 
    func _ready():
-    midi_player.note.connect(my_note_callback)
-    midi_player.play()
+      midi_player.note.connect(my_note_callback)
+      midi_player.play()
 
    func my_note_callback(event, track):
-       if (event['subtype'] == MIDI_MESSAGE_NOTE_ON): # note on
-           # do something on note on
-       elif (event['subtype'] == MIDI_MESSAGE_NOTE_OFF): # note off
-           # do something on note off
-
-       print("[Track: " + str(track) + "] Note played: " + str(event['note']))
+      if (event['subtype'] == MIDI_MESSAGE_NOTE_ON): # note on
+         # do something on note on
+      elif (event['subtype'] == MIDI_MESSAGE_NOTE_OFF): # note off
+         # do something on note off
+      
+      print("[Track: " + str(track) + "] Note played: " + str(event['note']))
 
 
    ```
+
+## Manual Process
+
+Godot Midi supports two sync modes, automatic process and manual process. The example above shows automatic process, this is great for use cases where you don't need to sync midi playback with an audio player or a game system. However, in rhythm games and other time-sensitive projects, it's recommended you use manual process. Manual process allows you to "tick" the midi player with an arbitrary delta time value. Below is an example of manual process being used to sync an audio stream player
+
+```gdscript
+   func _ready():
+      midi_player.note.connect(my_note_callback)
+      midi_player.manual_process = true
+      midi_player.play()
+
+   # Called every frame. 'delta' is the elapsed time since the previous frame.
+   func _process(delta):
+   
+      # get asp playback time
+      var time = asp.get_playback_position() + AudioServer.get_time_since_last_mix()
+      # Compensate for output latency.
+      time -= AudioServer.get_output_latency()
+      
+      # tick the midi player with the delta from our audio stream player
+      # this syncs the midi player with the audio server
+      # this is a more accurate way of doing it than using the delta from _process
+      var asp_delta = time - last_time
+      last_time = time
+      midi_player.process_delta(asp_delta)
+
+   func my_note_callback(event, track):
+      if (event['subtype'] == MIDI_MESSAGE_NOTE_ON): # note on
+         # do something on note on
+      elif (event['subtype'] == MIDI_MESSAGE_NOTE_OFF): # note off
+         # do something on note off
+      
+      print("[Track: " + str(track) + "] Note played: " + str(event['note']))
+```
 
 Open the demo project for an included music visualizer script!
