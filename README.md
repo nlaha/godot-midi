@@ -65,15 +65,31 @@ This GDExtension addon is only compatible with Godot version 4.1.2 and higher.
 
    ```
 
-## Manual Process
+## Manual Process (Syncing with Music)
 
 Godot Midi supports two sync modes, **automatic process** and **manual process**. The example above shows automatic process, this is great for use cases where you don't need to sync midi playback with an audio player or a game system. However, in rhythm games and other time-sensitive projects, it's recommended you use manual process. Manual process allows you to "tick" the midi player with an arbitrary delta time value. Below is an example of manual process being used to sync an audio stream player
+
+Note the mechanism for looping the audio and midi. Because Godot doesn't have a signal for detecting when the AudioStreamPlayer has looped, we need to manually implement looping logic for both the midi and the music.
 
 ```gdscript
    func _ready():
       midi_player.note.connect(my_note_callback)
       midi_player.manual_process = true
       midi_player.play()
+
+   	if loop:
+   		asp.finished.connect(on_loop)
+
+   func on_loop():
+   	# loop midi player
+   	print("Looping MIDI")
+   	last_time = 0
+   	midi_player.current_time = 0
+   	midi_player.stop() # resets time
+   	midi_player.play() # plays midi
+   	
+   	# play audio stream
+   	asp.play()
 
    # Called every frame. 'delta' is the elapsed time since the previous frame.
    func _process(delta):
