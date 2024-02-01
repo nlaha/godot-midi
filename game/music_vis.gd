@@ -1,5 +1,6 @@
 extends Node
 
+@export var loop = true
 @export var note_materials : Array[Material]
 
 var notes = []
@@ -17,8 +18,23 @@ func _ready():
 	# we set the following to true so we can tick the midi player from
 	# within our script, this is necessary for accurate syncing with the asp
 	midi_player.manual_process = true
+	midi_player.loop = false
 	midi_player.note.connect(on_note)
 	midi_player.play()
+	
+	if loop:
+		asp.finished.connect(on_loop)
+
+func on_loop():
+	# loop midi player
+	print("Looping MIDI")
+	last_time = 0
+	midi_player.current_time = 0
+	midi_player.stop() # resets time
+	midi_player.play() # plays midi
+	
+	# play audio stream
+	asp.play()
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):

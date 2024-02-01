@@ -24,6 +24,8 @@ void MidiPlayer::stop()
 {
     // reset time to zero
     this->current_time = 0;
+    this->track_index_offsets.clear();
+    this->track_index_offsets.resize(this->midi->get_track_count());
     this->state = PlayerState::Stopped;
     UtilityFunctions::print("[GodotMidi] Stopped");
 }
@@ -113,13 +115,12 @@ void MidiPlayer::process_delta(double delta)
             {
                 if (this->loop == false)
                 {
-                    this->state = PlayerState::Stopped;
+                    this->stop();
                     UtilityFunctions::print("[GodotMidi] Finished, stopping");
                     return;
                 }
-                this->current_time = 0;
-                this->track_index_offsets.clear();
-                this->track_index_offsets.resize(this->midi->get_track_count());
+                this->stop();
+                this->play();
                 UtilityFunctions::print("[GodotMidi] Finished, looping");
             }
 
