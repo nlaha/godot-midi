@@ -116,6 +116,29 @@ public:
     void set_current_time(double current_time)
     {
         this->current_time = current_time;
+
+        // update track_index_offsets
+        for (uint64_t i = 0; i < this->midi->get_track_count(); i++)
+        {
+            // get events for this track
+            Array events = this->midi->get_tracks()[i].get("events");
+
+            // search forward in time
+            for (uint64_t j = 0; j < events.size(); j++)
+            {
+                Dictionary event = events[j];
+                double event_time = event.get("time", 0);
+
+                // update the offset if the event time is less than the current time
+                if (this->current_time >= event_time)
+                {
+                    this->track_index_offsets[i] = j;
+                } else
+                {
+                    break;
+                }
+            }
+        }
     };
 
     void set_midi(const Ref<MidiResource> &midi)
