@@ -30,10 +30,7 @@ func _get_option_visibility(option, name, options):
 func _get_import_options(name, preset):
 	match preset:
 		Presets.DEFAULT:
-			return [{
-						"name": "only_notes",
-						"default_value": false
-					}]
+			return []
 		_:
 			return []
 
@@ -50,7 +47,6 @@ func _get_import_order():
 func _import(source_file, save_path, options, r_platform_variants, r_gen_files):
 
 	print("[GodotMidi] Importing midi file: " + source_file)
-	print("[GodotMidi] Importing with only_notes: " + String("yes" if options.only_notes else "no"))
 
 	var save_file = save_path + "." + _get_save_extension()
 	var midi_resource = MidiResource.new()
