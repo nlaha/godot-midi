@@ -6,6 +6,8 @@ This plugin aims to make rhythm game development and music syncing easier than e
 
 https://github.com/nlaha/godot-midi/assets/10292944/f88acfac-1ff3-49ee-8d25-9ee0ee585d09
 
+https://github.com/nlaha/godot-midi/assets/10292944/543646ec-ed45-406b-a3e5-f2b26caabfbe
+
 ## Compatibility
 
 This GDExtension addon is only compatible with Godot version 4.1.2 and higher.
