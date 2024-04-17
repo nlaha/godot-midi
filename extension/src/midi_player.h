@@ -53,7 +53,11 @@ protected:
         ClassDB::bind_method(D_METHOD("get_manual_process"), &MidiPlayer::get_manual_process);
         ClassDB::bind_method(D_METHOD("set_manual_process", "manual_process"), &MidiPlayer::set_manual_process);
         ADD_PROPERTY(PropertyInfo(Variant::BOOL, "manual_process"), "set_manual_process", "get_manual_process");
-        
+
+        ClassDB::bind_method(D_METHOD("get_speed_scale"), &MidiPlayer::get_speed_scale);
+        ClassDB::bind_method(D_METHOD("set_speed_scale", "speed_scale"), &MidiPlayer::set_speed_scale);
+        ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "speed_scale"), "set_speed_scale", "get_speed_scale");
+
         ClassDB::bind_method(D_METHOD("process_delta", "delta"), &MidiPlayer::process_delta);
 
         ADD_SIGNAL(MethodInfo("finished"));
@@ -64,13 +68,26 @@ protected:
     };
 
 private:
+    /// @brief The midi resource to play
     Ref<MidiResource> midi;
 
+    /// @brief The current state of the player
     PlayerState state;
+
+    /// @brief The current time in seconds
     double current_time;
+
+    /// @brief The current track index offsets
     Array track_index_offsets;
+
+    /// @brief Whether to loop the midi playback
     bool loop;
+
+    /// @brief Whether to manually process the midi playback
     bool manual_process;
+
+    /// @brief The speed scale of the midi playback (1.0 = normal speed, 2.0 = double speed, 0.5 = half speed, etc.)
+    double speed_scale;
 
 public:
     virtual void _process(double delta) override;
@@ -82,6 +99,11 @@ public:
     void play();
     void stop();
     void pause();
+
+    double get_speed_scale()
+    {
+        return this->speed_scale;
+    };
 
     bool get_manual_process()
     {
@@ -101,6 +123,11 @@ public:
     double get_current_time()
     {
         return this->current_time;
+    };
+
+    void set_speed_scale(double speed_scale)
+    {
+        this->speed_scale = speed_scale;
     };
 
     void set_manual_process(bool manual_process)
@@ -133,7 +160,8 @@ public:
                 if (this->current_time >= event_time)
                 {
                     this->track_index_offsets[i] = j;
-                } else
+                }
+                else
                 {
                     break;
                 }

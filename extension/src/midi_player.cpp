@@ -4,6 +4,10 @@ MidiPlayer::MidiPlayer()
 {
     // initialize variables
     this->current_time = 0;
+    this->speed_scale = 1;
+    this->loop = false;
+    this->state = PlayerState::Stopped;
+    this->manual_process = false;
 
     set_process_thread_group(ProcessThreadGroup::PROCESS_THREAD_GROUP_MAIN_THREAD);
 }
@@ -126,7 +130,7 @@ void MidiPlayer::process_delta(double delta)
 
             // increment time, current time will hold the
             // number of seconds since starting
-            this->current_time += delta;
+            this->current_time += delta * speed_scale;
         }
     }
 }
