@@ -38,7 +38,7 @@ This GDExtension addon is only compatible with Godot version 4.1.2 and higher.
 
 1. Import a midi file by adding it to your project folder
 
-> **NOTE:** If you run into import errors or problems with a midi file you downloaded from the internet, it's likely there is a midi event or format that isn't supported by Godot Midi. The best way to fix this is to import the midi file into a DAW (digital audio workstation) or similar software and re-export it. This should convert the midi file into a format easily readable by Godot Midi.
+> **NOTE:** If you run into import errors or problems with a midi file you downloaded from the internet, it's likely there is a midi event or format that isn't supported by Godot Midi. The best way to fix this is to import the midi file into a DAW (digital audio workstation) or similar software and re-export it. This should convert the midi file into a format easily readable by Godot Midi. I do all my testing with FL Studio so I'd recommend that, you can use the free demo version if you don't have a license.
 
 3. Add a "MidiPlayer" node to your scene
 
