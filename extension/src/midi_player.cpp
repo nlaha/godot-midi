@@ -52,6 +52,11 @@ void MidiPlayer::_process(double delta)
 
 void MidiPlayer::process_delta(double delta)
 {
+    if (Engine::get_singleton()->is_editor_hint())
+    {
+        return;
+    }
+
     if (this->midi == NULL)
     {
         UtilityFunctions::printerr("[GodotMidi] No midi resource set");
