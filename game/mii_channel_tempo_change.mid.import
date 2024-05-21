@@ -1,0 +1,14 @@
+[remap]
+
+importer="com.nlaha.godotmidi"
+type="MidiResource"
+uid="uid://ndxo4pvn5ked"
+path="res://.godot/imported/mii_channel_tempo_change.mid-47351ed98369ef74833d875e643ead5a.res"
+
+[deps]
+
+source_file="res://mii_channel_tempo_change.mid"
+dest_files=["res://.godot/imported/mii_channel_tempo_change.mid-47351ed98369ef74833d875e643ead5a.res"]
+
+[params]
+

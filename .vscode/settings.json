@@ -2,6 +2,7 @@
   "files.associations": {
     "*.yy": "jsonc",
     "*.sc": "glsl",
+    "*.h": "cpp",
     "istream": "cpp",
     "type_traits": "cpp",
     "vector": "cpp",
@@ -68,6 +69,11 @@
     "xstring": "cpp",
     "xtr1common": "cpp",
     "xtree": "cpp",
-    "xutility": "cpp"
+    "xutility": "cpp",
+    "csignal": "cpp",
+    "fstream": "cpp",
+    "functional": "cpp",
+    "mutex": "cpp",
+    "unordered_set": "cpp"
   }
 }

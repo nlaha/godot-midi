@@ -4,7 +4,7 @@
 
 Error MidiResource::load_file(const String &p_path)
 {
-    UtilityFunctions::print(String("loading midi file: ") + p_path);
+    UtilityFunctions::print(String("[GodotMidi] Reading midi file data: ") + p_path);
 
     // get midi file data
     godot::Ref<godot::FileAccess> midi_file = FileAccess::open(p_path, FileAccess::READ);
@@ -16,8 +16,6 @@ Error MidiResource::load_file(const String &p_path)
 
     PackedByteArray midi_data = midi_file->get_buffer(midi_file->get_length());
     // file will be auto-closed when midi_file goes out of scope
-
-    // UtilityFunctions::print(String("[GodotMidi] File size: ") + String::num_int64(midi_data.size()));
 
     // read header chunk
     MidiParser::RawMidiChunk header_chunk;
@@ -61,23 +59,21 @@ Error MidiResource::load_file(const String &p_path)
         this->tracks.push_back(track_dict);
 
         // loop through events
-        double time = 0;
+        double time = 0.0;
         for (int i = 0; i < track.events.size(); i++)
         {
             // get event pointer
             std::unique_ptr<MidiParser::MidiEvent> p_event = std::move(track.events[i]);
 
-            double delta_time = 0.0;
-            double tick_duration = (double)header.tempo / (double)header.division;
+            double delta_microseconds = 0.0;
 
             // meta events
             if (p_event->get_type() == MidiParser::MidiEvent::EventType::Meta)
             {
                 MidiParser::MidiEventMeta meta_event = *dynamic_cast<MidiParser::MidiEventMeta *>(p_event.get());
-                delta_time = (double)meta_event.delta_time;
+                delta_microseconds = (double)meta_event.delta_microseconds;
 
                 // increment current time
-                double delta_microseconds = (double)delta_time * tick_duration;
                 double delta_seconds = delta_microseconds / 1000000.0;
                 time += delta_seconds;
 
@@ -107,10 +103,9 @@ Error MidiResource::load_file(const String &p_path)
             if (p_event->get_type() == MidiParser::MidiEvent::EventType::Note)
             {
                 MidiParser::MidiEventNote note_event = *dynamic_cast<MidiParser::MidiEventNote *>(p_event.get());
-                delta_time = (double)note_event.delta_time;
+                delta_microseconds = (double)note_event.delta_microseconds;
 
                 // increment current time
-                double delta_microseconds = (double)delta_time * tick_duration;
                 double delta_seconds = delta_microseconds / 1000000.0;
                 time += delta_seconds;
 
@@ -133,10 +128,9 @@ Error MidiResource::load_file(const String &p_path)
             if (p_event->get_type() == MidiParser::MidiEvent::EventType::System)
             {
                 MidiParser::MidiEventSystem system_event = *dynamic_cast<MidiParser::MidiEventSystem *>(p_event.get());
-                delta_time = (double)system_event.delta_time;
+                delta_microseconds = (double)system_event.delta_microseconds;
 
                 // increment current time
-                double delta_microseconds = (double)delta_time * tick_duration;
                 double delta_seconds = delta_microseconds / 1000000.0;
                 time += delta_seconds;
 

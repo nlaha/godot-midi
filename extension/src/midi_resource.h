@@ -13,6 +13,8 @@
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/classes/file_access.hpp>
 
+#include "midi_resource.h"
+
 using namespace godot;
 
 /// @brief MidiResource class, responsible for loading and parsing a midi file, then storing it in a format that can be played back
