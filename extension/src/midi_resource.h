@@ -62,19 +62,45 @@ public:
     Error save_file(const String &p_path, const Ref<Resource> &p_resource);
 
     // getters and setters
+
+    /// @brief Sets the format of the midi file, see MidiParser::MidiHeaderChunk::MidiFileFormat
+    /// @param p_format
     inline void set_format(int p_format) { format = p_format; }
+
+    /// @brief Gets the format of the midi file, see MidiParser::MidiHeaderChunk::MidiFileFormat
+    /// @return
     inline int get_format() const { return format; }
 
+    /// @brief Sets the number of tracks in the midi file
+    /// @param p_track_count
     inline void set_track_count(int p_track_count) { track_count = p_track_count; }
+
+    /// @brief Gets the number of tracks in the midi file
+    /// @return
     inline int get_track_count() const { return track_count; }
 
+    /// @brief Sets the division of the midi file in ticks per quarter note
+    /// @param p_division
     inline void set_division(int p_division) { division = p_division; }
+
+    /// @brief Gets the division of the midi file in ticks per quarter note
+    /// @return
     inline int get_division() const { return division; }
 
+    /// @brief Sets the tempo in microseconds per quarter note
+    /// @param p_tempo
     inline void set_tempo(int p_tempo) { tempo = p_tempo; }
+
+    /// @brief Gets the tempo in microseconds per quarter note
+    /// @return
     inline int get_tempo() const { return tempo; }
 
+    /// @brief Sets the tracks of the midi file
+    /// @param p_tracks
     inline void set_tracks(Array p_tracks) { tracks = p_tracks; }
+
+    /// @brief Gets the tracks of the midi file
+    /// @return
     inline Array get_tracks() const { return tracks; }
 };
 

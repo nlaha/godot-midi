@@ -59,34 +59,30 @@ Error MidiResource::load_file(const String &p_path)
         this->tracks.push_back(track_dict);
 
         // loop through events
-        double time = 0.0;
         for (int i = 0; i < track.events.size(); i++)
         {
             // get event pointer
             std::unique_ptr<MidiParser::MidiEvent> p_event = std::move(track.events[i]);
 
-            double delta_microseconds = 0.0;
+            double delta = 0.0;
 
             // meta events
             if (p_event->get_type() == MidiParser::MidiEvent::EventType::Meta)
             {
                 MidiParser::MidiEventMeta meta_event = *dynamic_cast<MidiParser::MidiEventMeta *>(p_event.get());
-                delta_microseconds = (double)meta_event.delta_microseconds;
-
-                // increment current time
-                double delta_seconds = delta_microseconds / 1000000.0;
-                time += delta_seconds;
+                delta = (double)meta_event.delta;
 
                 // load meta event into current track
                 Dictionary event_dict;
                 event_dict["type"] = "meta";
                 event_dict["track"] = trk_idx;
-                event_dict["subtype"] = meta_event.event_type;
-                event_dict["time"] = time;
-                event_dict["text"] = meta_event.text;
-                event_dict["data"] = meta_event.data;
+                // cast to int
+                event_dict["subtype"] = static_cast<int64_t>(meta_event.event_type);
+                event_dict["delta"] = delta;
+                // since raw data is almost never useful for meta events, we store it as a variant
+                // and put it in the data field
+                event_dict["data"] = static_cast<Variant>(meta_event.meta_data);
                 event_dict["channel"] = meta_event.channel;
-                event_dict["delta"] = delta_seconds;
 
                 // add event to track
                 Array event_array = this->tracks[trk_idx].get("events");
@@ -95,7 +91,7 @@ Error MidiResource::load_file(const String &p_path)
                 // if we have a track name event, update the track name
                 if (meta_event.event_type == MidiParser::MidiEventMeta::MidiMetaEventType::SequenceOrTrackName)
                 {
-                    this->tracks[trk_idx].set("name", meta_event.text);
+                    this->tracks[trk_idx].set("name", meta_event.meta_data);
                 }
             }
 
@@ -103,18 +99,14 @@ Error MidiResource::load_file(const String &p_path)
             if (p_event->get_type() == MidiParser::MidiEvent::EventType::Note)
             {
                 MidiParser::MidiEventNote note_event = *dynamic_cast<MidiParser::MidiEventNote *>(p_event.get());
-                delta_microseconds = (double)note_event.delta_microseconds;
-
-                // increment current time
-                double delta_seconds = delta_microseconds / 1000000.0;
-                time += delta_seconds;
+                delta = (double)note_event.delta;
 
                 // load note event into current track
                 Dictionary event_dict;
                 event_dict["type"] = "note";
                 event_dict["track"] = trk_idx;
                 event_dict["subtype"] = note_event.event_type;
-                event_dict["time"] = time;
+                event_dict["delta"] = delta;
                 event_dict["note"] = note_event.note;
                 event_dict["data"] = note_event.data;
                 event_dict["channel"] = note_event.channel;
@@ -128,18 +120,14 @@ Error MidiResource::load_file(const String &p_path)
             if (p_event->get_type() == MidiParser::MidiEvent::EventType::System)
             {
                 MidiParser::MidiEventSystem system_event = *dynamic_cast<MidiParser::MidiEventSystem *>(p_event.get());
-                delta_microseconds = (double)system_event.delta_microseconds;
-
-                // increment current time
-                double delta_seconds = delta_microseconds / 1000000.0;
-                time += delta_seconds;
+                delta = (double)system_event.delta;
 
                 // load system event into current track
                 Dictionary event_dict;
                 event_dict["type"] = "system";
                 event_dict["track"] = trk_idx;
                 event_dict["subtype"] = system_event.event_type;
-                event_dict["time"] = time;
+                event_dict["delta"] = delta;
                 event_dict["channel"] = system_event.channel;
 
                 // add event to track
