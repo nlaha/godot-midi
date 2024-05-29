@@ -17,8 +17,7 @@ This GDExtension addon is only compatible with Godot version 4.1.2 and higher.
 1. Download the latest release from https://github.com/nlaha/godot-midi/releases
 
 2. Copy the `godot-midi` folder to your project's `addons` folder
-   
-4. Enable the addon in Godot's project settings
+3. Enable the addon in Godot's project settings
 
 ## Building from source
 
@@ -61,7 +60,7 @@ This GDExtension addon is only compatible with Godot version 4.1.2 and higher.
          # do something on note on
       elif (event['subtype'] == MIDI_MESSAGE_NOTE_OFF): # note off
          # do something on note off
-      
+
       print("[Track: " + str(track) + "] Note played: " + str(event['note']))
 
 
@@ -86,21 +85,20 @@ Note the mechanism for looping the audio and midi. Because Godot doesn't have a 
    	# loop midi player
    	print("Looping MIDI")
    	last_time = 0
-   	midi_player.current_time = 0
-   	midi_player.stop() # resets time
+   	midi_player.stop() # resets time and other important variables
    	midi_player.play() # plays midi
-   	
+
    	# play audio stream
    	asp.play()
 
    # Called every frame. 'delta' is the elapsed time since the previous frame.
    func _process(delta):
-   
+
       # get asp playback time
       var time = asp.get_playback_position() + AudioServer.get_time_since_last_mix()
       # Compensate for output latency.
       time -= AudioServer.get_output_latency()
-      
+
       # tick the midi player with the delta from our audio stream player
       # this syncs the midi player with the audio server
       # this is a more accurate way of doing it than using the delta from _process
@@ -113,7 +111,7 @@ Note the mechanism for looping the audio and midi. Because Godot doesn't have a 
          # do something on note on
       elif (event['subtype'] == MIDI_MESSAGE_NOTE_OFF): # note off
          # do something on note off
-      
+
       print("[Track: " + str(track) + "] Note played: " + str(event['note']))
 ```
 
