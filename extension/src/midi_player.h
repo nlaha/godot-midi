@@ -15,6 +15,7 @@
 #include <godot_cpp/classes/engine.hpp>
 
 #include "midi_resource.h"
+#include "midi_parser.h"
 
 using namespace godot;
 
@@ -88,6 +89,9 @@ private:
 
     /// @brief The speed scale of the midi playback (1.0 = normal speed, 2.0 = double speed, 0.5 = half speed, etc.)
     double speed_scale;
+
+    /// @brief Track previous time for delta calculation
+    Array prev_track_times;
 
 public:
     virtual void _process(double delta) override;

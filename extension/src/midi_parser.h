@@ -97,10 +97,10 @@ public:
         };
 
         int32_t channel;
-        int32_t delta_time;
+        double delta;
 
         virtual ~MidiEvent() = default;
-        MidiEvent(int32_t channel, int32_t delta_time);
+        MidiEvent(int32_t channel, double delta);
         MidiEvent(const MidiEvent &other);
 
         virtual int32_t get_bytes_used() const;
@@ -132,7 +132,7 @@ public:
         uint8_t data;
         NoteType event_type;
 
-        MidiEventNote(int32_t channel, int32_t delta_time, PackedByteArray data, NoteType event_type);
+        MidiEventNote(int32_t channel, double delta_time, PackedByteArray data, NoteType event_type);
 
         MidiEventNote(const MidiEventNote &other) : MidiEvent(other)
         {
@@ -162,7 +162,7 @@ public:
 
         MidiSystemEventType event_type;
 
-        MidiEventSystem(int32_t delta_time, PackedByteArray data);
+        MidiEventSystem(double delta_time, PackedByteArray data);
 
         MidiEventSystem(const MidiEventSystem &other) : MidiEvent(other)
         {
@@ -201,15 +201,17 @@ public:
         MidiMetaEventType event_type;
         PackedByteArray data;
         int32_t event_data_length;
-        String text;
 
-        MidiEventMeta(int32_t delta_time, PackedByteArray data);
+        // the actual processed data
+        Variant meta_data;
+
+        MidiEventMeta(double delta_time, PackedByteArray data);
         MidiEventMeta(const MidiEventMeta &other) : MidiEvent(other)
         {
             event_type = other.event_type;
             data = other.data;
-            text = other.text;
             event_data_length = other.event_data_length;
+            meta_data = other.meta_data;
         }
 
         EventType get_type() const override

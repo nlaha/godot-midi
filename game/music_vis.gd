@@ -29,8 +29,7 @@ func on_loop():
 	# loop midi player
 	print("Looping MIDI")
 	last_time = 0
-	midi_player.current_time = 0
-	midi_player.stop() # resets time
+	midi_player.stop() # resets time and other important variables
 	midi_player.play() # plays midi
 	
 	# play audio stream

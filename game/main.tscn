@@ -2,8 +2,8 @@
 
 [ext_resource type="Script" path="res://music_vis.gd" id="1_7bol8"]
 [ext_resource type="Shader" path="res://note_vis_shader.gdshader" id="2_uwn88"]
-[ext_resource type="AudioStream" uid="uid://bib56neltjbos" path="res://zeal.ogg" id="3_8807r"]
-[ext_resource type="MidiResource" uid="uid://bwk6t11415q6n" path="res://zeal.mid" id="3_l8227"]
+[ext_resource type="MidiResource" uid="uid://bwk6t11415q6n" path="res://zeal.mid" id="3_p5cl2"]
+[ext_resource type="AudioStream" uid="uid://bib56neltjbos" path="res://zeal.ogg" id="4_8641d"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_2soq2"]
 render_priority = 0
@@ -63,7 +63,7 @@ script = ExtResource("1_7bol8")
 note_materials = Array[Material]([SubResource("ShaderMaterial_2soq2"), SubResource("ShaderMaterial_33vtw"), SubResource("ShaderMaterial_jh5ke"), SubResource("ShaderMaterial_4arlw"), SubResource("ShaderMaterial_wg5fx"), SubResource("ShaderMaterial_gw6ig"), SubResource("ShaderMaterial_utwia"), SubResource("ShaderMaterial_grq4g")])
 
 [node name="MidiPlayer" type="MidiPlayer" parent="."]
-midi = ExtResource("3_l8227")
+midi = ExtResource("3_p5cl2")
 loop = true
 manual_process = true
 process_thread_group = 0
@@ -82,6 +82,6 @@ size = Vector3(18, 0.1, 1)
 environment = SubResource("Environment_6map0")
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("3_8807r")
+stream = ExtResource("4_8641d")
 volume_db = -10.0
 autoplay = true

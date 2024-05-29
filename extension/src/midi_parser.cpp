@@ -53,9 +53,9 @@ MidiParser::MidiHeaderChunk::MidiHeaderChunk()
     file_format = MidiFileFormat::SingleTrack;
     num_tracks = 0;
     division_type = MidiDivisionType::TicksPerQuarterNote;
-    division = 0;
+    division = 48;
     tempo = 500000;
-    end_of_track = false;
+    only_notes = false;
 }
 
 /// @brief parses a chunk of raw bytes into a header chunk
@@ -88,7 +88,7 @@ bool MidiParser::MidiHeaderChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk 
     // if it's ticks per quarter note, then we just read the value
     if (division_type == MidiDivisionType::TicksPerQuarterNote)
     {
-        division = Utility::decode_int16_be(raw.chunk_data, 4);
+        division = static_cast<int32_t>(Utility::decode_int16_be(raw.chunk_data, 4));
     }
     else
     {
@@ -100,11 +100,11 @@ bool MidiParser::MidiHeaderChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk 
 
 /// @brief constructor
 /// @param channel
-/// @param delta_time
-MidiParser::MidiEvent::MidiEvent(int32_t channel, int32_t delta_time)
+/// @param delta
+MidiParser::MidiEvent::MidiEvent(int32_t channel, double delta)
 {
     this->channel = channel;
-    this->delta_time = delta_time;
+    this->delta = delta;
 }
 
 /// @brief copy constructor
@@ -112,7 +112,7 @@ MidiParser::MidiEvent::MidiEvent(int32_t channel, int32_t delta_time)
 MidiParser::MidiEvent::MidiEvent(const MidiEvent &other)
 {
     this->channel = other.channel;
-    this->delta_time = other.delta_time;
+    this->delta = other.delta;
     this->bytes_used = other.bytes_used;
 }
 
@@ -127,15 +127,15 @@ int32_t MidiParser::MidiEvent::get_bytes_used() const
 /// @return
 String MidiParser::MidiEvent::to_string() const
 {
-    return String("MidiEvent: channel=") + String::num_int64(channel) + String(", delta_time=") + String::num_int64(delta_time);
+    return String("MidiEvent: channel=") + String::num_int64(channel) + String(", delta=") + String::num_int64(delta);
 }
 
 /// @brief Constructor for MIDI note events
 /// @param channel the MIDI channel
-/// @param delta_time the delta time
+/// @param delta the delta time in microseconds
 /// @param data the data for the event
 /// @param event_type the type of the event
-MidiParser::MidiEventNote::MidiEventNote(int32_t channel, int32_t delta_time, PackedByteArray data, NoteType event_type) : MidiEvent(channel, delta_time)
+MidiParser::MidiEventNote::MidiEventNote(int32_t channel, double delta, PackedByteArray data, NoteType event_type) : MidiEvent(channel, delta)
 {
     this->event_type = event_type;
 
@@ -170,67 +170,58 @@ MidiParser::MidiEventNote::MidiEventNote(int32_t channel, int32_t delta_time, Pa
 }
 
 /// @brief Constructor for MIDI system events
-/// @param delta_time
+/// @param delta
 /// @param data
-MidiParser::MidiEventSystem::MidiEventSystem(int32_t delta_time, PackedByteArray data) : MidiEvent(0, delta_time)
+MidiParser::MidiEventSystem::MidiEventSystem(double delta, PackedByteArray data) : MidiEvent(0, delta)
 {
     event_type = (MidiSystemEventType)data[0];
     bytes_used = 1;
 }
 
 /// @brief Constructor for MIDI meta events
-/// @param delta_time
+/// @param delta
 /// @param data
-MidiParser::MidiEventMeta::MidiEventMeta(int32_t delta_time, PackedByteArray data) : MidiEvent(0, delta_time)
+MidiParser::MidiEventMeta::MidiEventMeta(double delta, PackedByteArray data) : MidiEvent(0, delta)
 {
     // the first byte is always 0xFF
     // the second and third bytes are the event type and length
-    // UtilityFunctions::print(data.slice(0, 2).hex_encode());
     event_type = (MidiMetaEventType)data[1];
     event_data_length = Utility::decode_varint_be(data, 2, bytes_used);
-    // print data length
-    // UtilityFunctions::print(String::num_int64(event_data_length));
 
+    // if we have a non-zero length, then we have data
     if (event_data_length > 0)
     {
         this->data = data.slice(bytes_used + 2, (bytes_used + 2) + event_data_length);
     }
 
+    // increment bytes used
     bytes_used = event_data_length + bytes_used + 1;
-    // UtilityFunctions::print(String("NEW META EVENT: "));
-    // UtilityFunctions::print(String("Event type: ") + String::num_int64(event_type));
-    // UtilityFunctions::print(String("Bytes used: ") + String::num_int64(bytes_used));
-}
 
-/// @brief Parses the different meta event types
-/// @param meta_event the meta event to parse
-/// @param header the header chunk (will be modified for tempo changes, etc.)
-void MidiParser::MidiTrackChunk::IngestMetaEvent(MidiEventMeta &meta_event, MidiHeaderChunk &header)
-{
+    // Begin processing the various subtypes of meta events
     // text events
     if (
-        meta_event.event_type == MidiEventMeta::MidiMetaEventType::TextEvent ||
-        meta_event.event_type == MidiEventMeta::MidiMetaEventType::CopyRightNotice ||
-        meta_event.event_type == MidiEventMeta::MidiMetaEventType::SequenceOrTrackName ||
-        meta_event.event_type == MidiEventMeta::MidiMetaEventType::InstrumentName ||
-        meta_event.event_type == MidiEventMeta::MidiMetaEventType::Lyric ||
-        meta_event.event_type == MidiEventMeta::MidiMetaEventType::Marker ||
-        meta_event.event_type == MidiEventMeta::MidiMetaEventType::CuePoint ||
-        meta_event.event_type == MidiEventMeta::MidiMetaEventType::ProgramName ||
-        meta_event.event_type == MidiEventMeta::MidiMetaEventType::DeviceName ||
-        meta_event.event_type == MidiEventMeta::MidiMetaEventType::ArtistName)
+        this->event_type == MidiEventMeta::MidiMetaEventType::TextEvent ||
+        this->event_type == MidiEventMeta::MidiMetaEventType::CopyRightNotice ||
+        this->event_type == MidiEventMeta::MidiMetaEventType::SequenceOrTrackName ||
+        this->event_type == MidiEventMeta::MidiMetaEventType::InstrumentName ||
+        this->event_type == MidiEventMeta::MidiMetaEventType::Lyric ||
+        this->event_type == MidiEventMeta::MidiMetaEventType::Marker ||
+        this->event_type == MidiEventMeta::MidiMetaEventType::CuePoint ||
+        this->event_type == MidiEventMeta::MidiMetaEventType::ProgramName ||
+        this->event_type == MidiEventMeta::MidiMetaEventType::DeviceName ||
+        this->event_type == MidiEventMeta::MidiMetaEventType::ArtistName)
     {
         // marker
         // variable length
         // first byte is always 0x06
         // second byte is the length of the text
         // the rest of the bytes are the text
-        meta_event.text = meta_event.data.slice(0, meta_event.event_data_length).get_string_from_ascii();
+        this->meta_data = this->data.slice(0, this->event_data_length).get_string_from_ascii();
 
         return;
     }
 
-    switch (meta_event.event_type)
+    switch (this->event_type)
     {
     case MidiEventMeta::MidiMetaEventType::SetTempo:
     {
@@ -239,7 +230,7 @@ void MidiParser::MidiTrackChunk::IngestMetaEvent(MidiEventMeta &meta_event, Midi
         // the bytes are the tempo in microseconds per quarter note
 
         // set tempo of the track
-        header.tempo = Utility::decode_int24_be(meta_event.data, 0);
+        this->meta_data = Utility::decode_int24_be(this->data, 0);
         break;
     }
     case MidiEventMeta::MidiMetaEventType::TimeSignature:
@@ -254,12 +245,12 @@ void MidiParser::MidiTrackChunk::IngestMetaEvent(MidiEventMeta &meta_event, Midi
         // the fourth byte is the number of 32nd notes per quarter note
 
         // set time signature of the track
-        MidiTimeSignature time_signature = MidiTimeSignature();
-        time_signature.numerator = meta_event.data[0];
-        time_signature.denominator = (int32_t)pow(2, meta_event.data[1]);
-        time_signature.clocks_per_tick = meta_event.data[2];
-        time_signature.num_32nd_notes_per_quarter = meta_event.data[3];
-        this->time_signature = time_signature;
+        Dictionary time_signature;
+        time_signature["numerator"] = this->data[0];
+        time_signature["denominato"] = (int32_t)pow(2, this->data[1]);
+        time_signature["clocks_per_tick"] = this->data[2];
+        time_signature["num_32nd_notes_per_quarter"] = this->data[3];
+        meta_data = time_signature;
         break;
     }
     case MidiEventMeta::MidiMetaEventType::KeySignature:
@@ -272,10 +263,11 @@ void MidiParser::MidiTrackChunk::IngestMetaEvent(MidiEventMeta &meta_event, Midi
         // the second byte is the major (0) or minor (1) key
 
         // set key signature of the track
-        MidiKeySignature key_signature = MidiKeySignature();
-        key_signature.sharps_flats = meta_event.data[0];
-        key_signature.major_minor = meta_event.data[1];
-        this->key_signature = key_signature;
+        Dictionary key_signature;
+        key_signature["sharps_flats"] = this->data[0];
+        key_signature["major_minor"] = this->data[1];
+        meta_data = key_signature;
+
         break;
     }
     case MidiEventMeta::MidiMetaEventType::EndOfTrack:
@@ -284,7 +276,7 @@ void MidiParser::MidiTrackChunk::IngestMetaEvent(MidiEventMeta &meta_event, Midi
         // no data
 
         // set end of track flag
-        header.end_of_track = true;
+        this->meta_data = true;
     }
     default:
     {
@@ -333,9 +325,6 @@ bool MidiParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
         {
             event_code = 0xFF;
         }
-
-        // print event code
-        // UtilityFunctions::print(String("EVENT: ") + String::num_int64(event_code));
 
         PackedByteArray event_data = raw.chunk_data.slice(offset - 1, raw.chunk_size);
 
@@ -419,7 +408,6 @@ bool MidiParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
         {
             MidiEventMeta meta_event = MidiEventMeta(delta_time, event_data);
             offset += meta_event.get_bytes_used();
-            IngestMetaEvent(meta_event, header);
             meta_events.push_back(meta_event);
             ptr = std::make_unique<MidiEventMeta>(meta_event);
             events.push_back(std::move(ptr));

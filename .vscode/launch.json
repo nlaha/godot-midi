@@ -5,7 +5,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "(gdb) Launch",
+      "name": "Debug GodotMidi (gdb)",
       "type": "cppdbg",
       "request": "launch",
       "program": "C:\\Users\\nlaha\\scoop\\shims\\godot.exe",
@@ -13,9 +13,10 @@
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}/game",
       "environment": [],
-      "externalConsole": false,
+      "externalConsole": true,
       "MIMode": "gdb",
       "miDebuggerPath": "C:\\Users\\nlaha\\scoop\\shims\\gdb.exe",
+      "preLaunchTask": "build-godot-cpp",
       "setupCommands": [
         {
           "description": "Enable pretty-printing for gdb",
