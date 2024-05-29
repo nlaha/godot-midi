@@ -158,10 +158,19 @@ public:
             for (uint64_t j = 0; j < events.size(); j++)
             {
                 Dictionary event = events[j];
-                double event_time = event.get("time", 0);
+                double event_delta = event.get("delta", 0);
+
+                // apply tempo
+                double microseconds_per_tick = static_cast<double>(this->midi->get_tempo()) / static_cast<double>(this->midi->get_division());
+                // delta time is stored as ticks, convert to microseconds
+                event_delta = event_delta * microseconds_per_tick;
+
+                // convert to seconds for ease of use
+                double event_delta_seconds = event_delta / 1000000.0;
+                double event_absolute_time = event_delta_seconds + static_cast<double>(this->prev_track_times[i]);
 
                 // update the offset if the event time is less than the current time
-                if (this->current_time >= event_time)
+                if (this->current_time >= event_absolute_time)
                 {
                     this->track_index_offsets[i] = j;
                 }
@@ -169,6 +178,9 @@ public:
                 {
                     break;
                 }
+
+                // update the previous track time
+                this->prev_track_times[i] = event_absolute_time;
             }
         }
     };
