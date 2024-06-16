@@ -14,10 +14,24 @@
 #include <godot_cpp/variant/callable.hpp>
 #include <godot_cpp/classes/engine.hpp>
 
+#include <godot_cpp/classes/audio_stream_wav.hpp>
+
+// if we're on windows we need to include windows.h for the midi api
+#if defined(_WIN32) && !defined(WIN32)
+#define WIN32
+#endif
+
+#ifdef WIN32
+#include <windows.h>
+#endif
+
 #include "midi_resource.h"
 #include "midi_parser.h"
 
 using namespace godot;
+
+// forward declare cs_audio_source_t
+struct cs_audio_source_t;
 
 enum PlayerState
 {
@@ -59,6 +73,10 @@ protected:
         ClassDB::bind_method(D_METHOD("set_speed_scale", "speed_scale"), &MidiPlayer::set_speed_scale);
         ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "speed_scale"), "set_speed_scale", "get_speed_scale");
 
+        ClassDB::bind_method(D_METHOD("set_track_sound_effects", "track_sound_effects"), &MidiPlayer::set_track_sound_effects);
+        ClassDB::bind_method(D_METHOD("get_track_sound_effects"), &MidiPlayer::get_track_sound_effects);
+        ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "track_sound_effects"), "set_track_sound_effects", "get_track_sound_effects");
+
         ClassDB::bind_method(D_METHOD("process_delta", "delta"), &MidiPlayer::process_delta);
 
         ADD_SIGNAL(MethodInfo("finished"));
@@ -93,6 +111,11 @@ private:
     /// @brief Track previous time for delta calculation
     Array prev_track_times;
 
+    /// @brief Track sound effects, played when a note is played on a track (key = track index, value = AudioStream)
+    Dictionary track_sound_effects;
+
+    std::unordered_map<int, cs_audio_source_t*> audio_sources;
+
 public:
     virtual void _process(double delta) override;
     void process_delta(double delta);
@@ -104,46 +127,72 @@ public:
     void stop();
     void pause();
 
+    /// @brief Gets the speed scale of the midi playback
+    /// @return the speed scale
     double get_speed_scale()
     {
         return this->speed_scale;
     };
 
+    /// @brief Gets whether the midi playback is set to manually process
+    /// @return true if the midi playback is set to manually process, false otherwise
     bool get_manual_process()
     {
         return this->manual_process;
     };
 
+    /// @brief Gets whether the midi playback is set to loop
+    /// @return true if the midi playback is set to loop, false otherwise
     bool get_loop()
     {
         return this->loop;
     };
 
+    /// @brief Gets the current state of the player
+    /// @return the current state of the player
     int get_state()
     {
         return (int)this->state;
     };
 
+    /// @brief Gets the current time in seconds
+    /// @return the current time in seconds
     double get_current_time()
     {
         return this->current_time;
     };
 
+    /// @brief Sets the speed scale of the midi playback
+    /// @param speed_scale the speed scale
     void set_speed_scale(double speed_scale)
     {
         this->speed_scale = speed_scale;
     };
 
+    /// @brief Sets whether to manually process the midi playback
+    /// @param manual_process true for manual processing, false for automatic processing
     void set_manual_process(bool manual_process)
     {
         this->manual_process = manual_process;
     };
 
+    /// @brief Sets whether to loop the midi playback
+    /// @param loop true for looping, false for not looping
     void set_loop(bool loop)
     {
         this->loop = loop;
     };
 
+    /// @brief Sets the sound effects of the midi file
+    /// @param p_track_sound_effects
+    inline void set_track_sound_effects(Dictionary p_track_sound_effects) { track_sound_effects = p_track_sound_effects; }
+
+    /// @brief Gets the sound effects of the midi file
+    /// @return
+    inline Dictionary get_track_sound_effects() const { return track_sound_effects; }
+
+    /// @brief Sets the current time in seconds
+    /// @param current_time the current time in seconds
     void set_current_time(double current_time)
     {
         this->current_time = current_time;
@@ -185,6 +234,8 @@ public:
         }
     };
 
+    /// @brief Sets the midi resource to play
+    /// @param midi the midi resource to play
     void set_midi(const Ref<MidiResource> &midi)
     {
         this->midi = midi;
@@ -196,6 +247,8 @@ public:
         }
     };
 
+    /// @brief Gets the midi resource to play
+    /// @return the midi resource to play
     Ref<MidiResource> get_midi()
     {
         return this->midi;

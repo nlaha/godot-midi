@@ -13,6 +13,7 @@ config_version=5
 config/name="GDExtensionGodotMidi"
 run/main_scene="res://main.tscn"
 config/features=PackedStringArray("4.2")
+run/max_fps=15
 config/icon="res://icon.png"
 
 [editor_plugins]

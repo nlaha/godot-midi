@@ -1,9 +1,10 @@
-[gd_scene load_steps=16 format=3 uid="uid://cf5sqk6dd4esg"]
+[gd_scene load_steps=17 format=3 uid="uid://cf5sqk6dd4esg"]
 
 [ext_resource type="Script" path="res://music_vis.gd" id="1_7bol8"]
 [ext_resource type="Shader" path="res://note_vis_shader.gdshader" id="2_uwn88"]
-[ext_resource type="MidiResource" uid="uid://bwk6t11415q6n" path="res://zeal.mid" id="3_p5cl2"]
-[ext_resource type="AudioStream" uid="uid://bib56neltjbos" path="res://zeal.ogg" id="4_8641d"]
+[ext_resource type="MidiResource" uid="uid://b7orc63h2n67b" path="res://mii_channel.mid" id="3_jr2hb"]
+[ext_resource type="AudioStream" uid="uid://c2p2hlfeyvhsk" path="res://mii_channel.ogg" id="4_lsnq0"]
+[ext_resource type="AudioStream" uid="uid://dur4b0gwawj85" path="res://click_sfx.wav" id="5_ya40l"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_2soq2"]
 render_priority = 0
@@ -63,10 +64,15 @@ script = ExtResource("1_7bol8")
 note_materials = Array[Material]([SubResource("ShaderMaterial_2soq2"), SubResource("ShaderMaterial_33vtw"), SubResource("ShaderMaterial_jh5ke"), SubResource("ShaderMaterial_4arlw"), SubResource("ShaderMaterial_wg5fx"), SubResource("ShaderMaterial_gw6ig"), SubResource("ShaderMaterial_utwia"), SubResource("ShaderMaterial_grq4g")])
 
 [node name="MidiPlayer" type="MidiPlayer" parent="."]
-midi = ExtResource("3_p5cl2")
+midi = ExtResource("3_jr2hb")
 loop = true
 manual_process = true
-process_thread_group = 0
+track_sound_effects = {
+1: ExtResource("5_ya40l")
+}
+process_thread_group = 2
+process_thread_group_order = 0
+process_thread_messages = 0
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(-0.392767, 0.353553, -0.848961, 0.480471, 0.866026, 0.138372, 0.784144, -0.353553, -0.510018, -2, 2, 2)
@@ -81,7 +87,17 @@ size = Vector3(18, 0.1, 1)
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_6map0")
 
-[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("4_8641d")
+[node name="MusicPlayer" type="AudioStreamPlayer" parent="."]
+process_thread_group = 2
+process_thread_group_order = 0
+process_thread_messages = 0
+stream = ExtResource("4_lsnq0")
 volume_db = -10.0
 autoplay = true
+
+[node name="SFXPlayer" type="AudioStreamPlayer" parent="."]
+process_thread_group = 2
+process_thread_group_order = 0
+process_thread_messages = 0
+stream = ExtResource("5_ya40l")
+volume_db = -5.0

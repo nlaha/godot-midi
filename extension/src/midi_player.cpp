@@ -1,5 +1,8 @@
 #include "midi_player.h"
 
+#define CUTE_SOUND_IMPLEMENTATION
+#include "cute_sound.h"
+
 #define DEFAULT_MIDI_TEMPO 500000
 
 MidiPlayer::MidiPlayer()
@@ -14,11 +17,21 @@ MidiPlayer::MidiPlayer()
     this->state = PlayerState::Stopped;
     this->manual_process = false;
 
-    set_process_thread_group(ProcessThreadGroup::PROCESS_THREAD_GROUP_MAIN_THREAD);
+    //set_process_thread_group(ProcessThreadGroup::PROCESS_THREAD_GROUP_MAIN_THREAD);
+
+    HWND hwnd = GetConsoleWindow();
+    cs_init(hwnd, 44100, 1024, NULL);
 }
 
 MidiPlayer::~MidiPlayer()
 {
+    // free audio sources
+    for (auto it = audio_sources.begin(); it != audio_sources.end(); ++it)
+    {
+        cs_free_audio_source(it->second);
+    }
+    audio_sources.clear();
+    cs_shutdown();
 }
 
 /// @brief Set the midi resource to play and start the playback thread
@@ -91,13 +104,13 @@ void MidiPlayer::process_delta(double delta)
         {
             // process each track
             bool has_more_events = false;
-            for (uint64_t i = 0; i < this->midi->get_track_count(); i++)
+            for (uint64_t track_idx = 0; track_idx < this->midi->get_track_count(); track_idx++)
             {
                 // get events for this track
-                Array events = this->midi->get_tracks()[i].get("events");
+                Array events = this->midi->get_tracks()[track_idx].get("events");
 
                 // starting at index offset, check if there's an event at the current time
-                int index_off = this->track_index_offsets[i];
+                int index_off = this->track_index_offsets[track_idx];
                 index_off++;
 
                 // if we have more events, don't stop yet
@@ -107,9 +120,9 @@ void MidiPlayer::process_delta(double delta)
                 }
 
                 // search forward in time
-                for (uint64_t j = index_off; j < events.size(); j++)
+                for (uint64_t event_offset = index_off; event_offset < events.size(); event_offset++)
                 {
-                    Dictionary event = events[j];
+                    Dictionary event = events[event_offset];
                     double event_delta = event.get("delta", 0);
 
                     // apply tempo
@@ -119,11 +132,11 @@ void MidiPlayer::process_delta(double delta)
 
                     // convert to seconds for ease of use
                     double event_delta_seconds = event_delta / 1000000.0;
-                    double event_absolute_time = event_delta_seconds + static_cast<double>(this->prev_track_times[i]);
+                    double event_absolute_time = event_delta_seconds + static_cast<double>(this->prev_track_times[track_idx]);
 
                     if (this->current_time >= event_absolute_time)
                     {
-                        this->track_index_offsets[i] = j;
+                        this->track_index_offsets[track_idx] = event_offset;
                         String event_type = event.get("type", "undef");
 
                         if (event_type == "meta")
@@ -142,15 +155,37 @@ void MidiPlayer::process_delta(double delta)
                             // these should be handled in the same way as tempo changes
                             // to allow for changes during playback (even though it isn't usually necessary)
 
-                            emit_signal("meta", event, i);
+                            emit_signal("meta", event, track_idx);
                         }
                         else if (event_type == "note")
                         {
-                            emit_signal("note", event, i);
+                            emit_signal("note", event, track_idx);
+                            
+                            // check if this is a note on event
+                            if (static_cast<int>(event.get("subtype", 0)) == MIDI_MESSAGE_NOTE_ON)
+                            {
+                                // if a sound effect exists for this track, play it
+                                if (this->get_track_sound_effects().has(track_idx))
+                                {
+                                    Ref<AudioStreamWAV> sound_effect = this->get_track_sound_effects()[track_idx];
+                                    if (sound_effect.is_valid())
+                                    {
+                                        // if the sound effect hasn't been loaded yet, load it
+                                        if (audio_sources.find(track_idx) == audio_sources.end())
+                                        {
+                                            cs_audio_source_t *source = cs_read_mem_wav(sound_effect->get_data().ptr(), sound_effect->get_data().size(), 0);
+                                            audio_sources[track_idx] = source;
+                                        }
+
+                                        cs_sound_params_t params = cs_sound_params_default();
+                                        cs_play_sound(audio_sources[track_idx], params);
+                                    }
+                                }
+                            }
                         }
                         else if (event_type == "system")
                         {
-                            emit_signal("system", event, i);
+                            emit_signal("system", event, track_idx);
                         }
                         else
                         {
@@ -158,7 +193,7 @@ void MidiPlayer::process_delta(double delta)
                         }
 
                         // store time to look for events after this one
-                        this->prev_track_times[i] = event_absolute_time;
+                        this->prev_track_times[track_idx] = event_absolute_time;
                     }
                     else
                     {
@@ -188,4 +223,6 @@ void MidiPlayer::process_delta(double delta)
             this->current_time += delta * speed_scale;
         }
     }
+
+    cs_update(delta);
 }

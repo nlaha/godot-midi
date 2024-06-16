@@ -7,14 +7,15 @@ var notes = []
 var notes_on = {}
 
 var midi_player: MidiPlayer
-var asp: AudioStreamPlayer
+var music_asp: AudioStreamPlayer
+@onready var sfx_asp: AudioStreamPlayer = $SFXPlayer
 
 @onready var last_time = 0
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	midi_player = $MidiPlayer
-	asp = $AudioStreamPlayer
+	music_asp = $MusicPlayer
 	# we set the following to true so we can tick the midi player from
 	# within our script, this is necessary for accurate syncing with the asp
 	midi_player.manual_process = true
@@ -23,7 +24,7 @@ func _ready():
 	midi_player.play()
 	
 	if loop:
-		asp.finished.connect(on_loop)
+		music_asp.finished.connect(on_loop)
 
 func on_loop():
 	# loop midi player
@@ -33,13 +34,13 @@ func on_loop():
 	midi_player.play() # plays midi
 	
 	# play audio stream
-	asp.play()
+	music_asp.play()
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
 
 	# get asp playback time
-	var time = asp.get_playback_position() + AudioServer.get_time_since_last_mix()
+	var time = music_asp.get_playback_position() + AudioServer.get_time_since_last_mix()
 	# Compensate for output latency.
 	time -= AudioServer.get_output_latency()
 	
@@ -72,6 +73,7 @@ func _process(delta):
 # Called when a "note" type event is played
 func on_note(event, track):
 	if (event['subtype'] == MIDI_MESSAGE_NOTE_ON): # note on
+		#sfx_asp.play()
 		notes_on[event['note']] = track
 	elif (event['subtype'] == MIDI_MESSAGE_NOTE_OFF): # note off
 		notes_on.erase(event['note'])
