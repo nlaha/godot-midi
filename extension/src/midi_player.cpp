@@ -129,7 +129,7 @@ void MidiPlayer::process_delta(double delta)
                         if (event_type == "meta")
                         {
                             // print note index offset, time, j and absolute time, track, subtype and delta
-                            UtilityFunctions::print("Note index offset: " + String::num_int64(index_off) + " j: " + String::num_int64(j) + " Time: " + String::num(this->current_time) + " Absolute time: " + String::num(event_absolute_time) + " Track: " + String::num_int64(i) + " Subtype: " + String::num(event.get("subtype", 0)) + " Delta: " + String::num(event_delta_seconds));
+                            //UtilityFunctions::print("Note index offset: " + String::num_int64(index_off) + " j: " + String::num_int64(j) + " Time: " + String::num(this->current_time) + " Absolute time: " + String::num(event_absolute_time) + " Track: " + String::num_int64(i) + " Subtype: " + String::num(event.get("subtype", 0)) + " Delta: " + String::num(event_delta_seconds));
 
                             // ingest meta events such as tempo changes
                             // we need to do this now as opposed to when the midi file is loaded
@@ -141,7 +141,7 @@ void MidiPlayer::process_delta(double delta)
                                 this->midi->set_tempo(static_cast<int>(event.get("data", DEFAULT_MIDI_TEMPO)));
 
                                 // print tempo
-                                UtilityFunctions::print("[GodotMidi] Tempo: " + String::num(this->midi->get_tempo()));
+                                // UtilityFunctions::print("[GodotMidi] Tempo: " + String::num(this->midi->get_tempo()));
                             }
 
                             // TODO: support time signature changes
@@ -154,7 +154,7 @@ void MidiPlayer::process_delta(double delta)
                         {
                             emit_signal("note", event, i);
                             // print note index offset, time, j, absolute time, track, subtype and delta
-                            UtilityFunctions::print("Note index offset: " + String::num_int64(index_off) + " j: " + String::num_int64(j) + " Time: " + String::num(this->current_time) + " Absolute time: " + String::num(event_absolute_time) + " Track: " + String::num_int64(i) + " Subtype: " + String::num(event.get("subtype", 0)) + " Delta: " + String::num(event_delta_seconds));
+                            // UtilityFunctions::print("Note index offset: " + String::num_int64(index_off) + " j: " + String::num_int64(j) + " Time: " + String::num(this->current_time) + " Absolute time: " + String::num(event_absolute_time) + " Track: " + String::num_int64(i) + " Subtype: " + String::num(event.get("subtype", 0)) + " Delta: " + String::num(event_delta_seconds));
                         }
                         else if (event_type == "system")
                         {
