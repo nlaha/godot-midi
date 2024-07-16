@@ -106,8 +106,7 @@ void MidiPlayer::process_delta(double delta)
                 }
 
                 // search forward in time
-                // start at next available event (index offset + 1, since index offset is the last event we processed)
-                for (uint64_t j = index_off + 1; j < events.size(); j++)
+                for (uint64_t j = index_off; j < events.size(); j++)
                 {
                     Dictionary event = events[j];
                     double event_delta = event.get("delta", 0);
@@ -123,13 +122,14 @@ void MidiPlayer::process_delta(double delta)
 
                     if (this->current_time >= event_absolute_time)
                     {
-                        this->track_index_offsets[i] = j;
+                        // start at next available event (index offset + 1, since index offset is the last event we processed)
+                        this->track_index_offsets[i] = j + 1;
                         String event_type = event.get("type", "undef");
 
                         if (event_type == "meta")
                         {
-                            // print note index offset, time, j and absolute time, track and subtype
-                            UtilityFunctions::print("Note index offset: " + String::num_int64(index_off) + " j: " + String::num_int64(j) + " Time: " + String::num(this->current_time) + " Absolute time: " + String::num(event_absolute_time) + " Track: " + String::num_int64(i) + " Subtype: " + String::num(event.get("subtype", 0)));
+                            // print note index offset, time, j and absolute time, track, subtype and delta
+                            UtilityFunctions::print("Note index offset: " + String::num_int64(index_off) + " j: " + String::num_int64(j) + " Time: " + String::num(this->current_time) + " Absolute time: " + String::num(event_absolute_time) + " Track: " + String::num_int64(i) + " Subtype: " + String::num(event.get("subtype", 0)) + " Delta: " + String::num(event_delta_seconds));
 
                             // ingest meta events such as tempo changes
                             // we need to do this now as opposed to when the midi file is loaded
@@ -153,8 +153,8 @@ void MidiPlayer::process_delta(double delta)
                         else if (event_type == "note")
                         {
                             emit_signal("note", event, i);
-                            // print note index offset, time, j, absolute time, track and subtype
-                            UtilityFunctions::print("Note index offset: " + String::num_int64(index_off) + " j: " + String::num_int64(j) + " Time: " + String::num(this->current_time) + " Absolute time: " + String::num(event_absolute_time) + " Track: " + String::num_int64(i) + " Subtype: " + String::num(event.get("subtype", 0)));
+                            // print note index offset, time, j, absolute time, track, subtype and delta
+                            UtilityFunctions::print("Note index offset: " + String::num_int64(index_off) + " j: " + String::num_int64(j) + " Time: " + String::num(this->current_time) + " Absolute time: " + String::num(event_absolute_time) + " Track: " + String::num_int64(i) + " Subtype: " + String::num(event.get("subtype", 0)) + " Delta: " + String::num(event_delta_seconds));
                         }
                         else if (event_type == "system")
                         {
