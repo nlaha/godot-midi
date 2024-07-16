@@ -98,7 +98,6 @@ void MidiPlayer::process_delta(double delta)
 
                 // starting at index offset, check if there's an event at the current time
                 int index_off = this->track_index_offsets[i];
-                index_off++;
 
                 // if we have more events, don't stop yet
                 if (events.size() - 1 > index_off)
@@ -107,7 +106,8 @@ void MidiPlayer::process_delta(double delta)
                 }
 
                 // search forward in time
-                for (uint64_t j = index_off; j < events.size(); j++)
+                // start at next available event (index offset + 1, since index offset is the last event we processed)
+                for (uint64_t j = index_off + 1; j < events.size(); j++)
                 {
                     Dictionary event = events[j];
                     double event_delta = event.get("delta", 0);
@@ -128,6 +128,9 @@ void MidiPlayer::process_delta(double delta)
 
                         if (event_type == "meta")
                         {
+                            // print note index offset, time, j and absolute time, track and subtype
+                            UtilityFunctions::print("Note index offset: " + String::num_int64(index_off) + " j: " + String::num_int64(j) + " Time: " + String::num(this->current_time) + " Absolute time: " + String::num(event_absolute_time) + " Track: " + String::num_int64(i) + " Subtype: " + String::num(event.get("subtype", 0)));
+
                             // ingest meta events such as tempo changes
                             // we need to do this now as opposed to when the midi file is loaded
                             // to allow for tempo changes during playback
@@ -136,6 +139,9 @@ void MidiPlayer::process_delta(double delta)
                             if (meta_type == MidiParser::MidiEventMeta::MidiMetaEventType::SetTempo)
                             {
                                 this->midi->set_tempo(static_cast<int>(event.get("data", DEFAULT_MIDI_TEMPO)));
+
+                                // print tempo
+                                UtilityFunctions::print("[GodotMidi] Tempo: " + String::num(this->midi->get_tempo()));
                             }
 
                             // TODO: support time signature changes
@@ -147,6 +153,8 @@ void MidiPlayer::process_delta(double delta)
                         else if (event_type == "note")
                         {
                             emit_signal("note", event, i);
+                            // print note index offset, time, j, absolute time, track and subtype
+                            UtilityFunctions::print("Note index offset: " + String::num_int64(index_off) + " j: " + String::num_int64(j) + " Time: " + String::num(this->current_time) + " Absolute time: " + String::num(event_absolute_time) + " Track: " + String::num_int64(i) + " Subtype: " + String::num(event.get("subtype", 0)));
                         }
                         else if (event_type == "system")
                         {
@@ -164,7 +172,7 @@ void MidiPlayer::process_delta(double delta)
                     {
                         // print
                         // UtilityFunctions::print("[GodotMidi] No more events on this track at this time");
-                        // we've gone too far, break
+                        // we've gone too far, break and move to the next track
                         break;
                     }
                 }
