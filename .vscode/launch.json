@@ -9,7 +9,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "C:\\Users\\nlaha\\scoop\\shims\\godot.exe",
-      "args": ["-e ${workspaceFolder}/game/project.godot"],
+      "args": ["-e", "--path ${workspaceFolder}/game/project.godot"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}/game",
       "environment": [],
