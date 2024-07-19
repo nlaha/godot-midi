@@ -18,7 +18,6 @@
 #include <godot_cpp/classes/time.hpp>
 
 #include <thread>
-#include <mutex>
 
 #include "midi_resource.h"
 #include "midi_parser.h"

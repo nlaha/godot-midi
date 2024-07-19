@@ -2,9 +2,6 @@
 
 #define DEFAULT_MIDI_TEMPO 500000
 
-// global mutex
-std::mutex mtx;
-
 MidiPlayer::MidiPlayer()
 {
     // initialize variables
