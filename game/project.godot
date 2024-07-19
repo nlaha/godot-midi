@@ -18,7 +18,3 @@ config/icon="res://icon.png"
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/godot_midi/plugin.cfg")
-
-[rendering]
-
-driver/threads/thread_model=2

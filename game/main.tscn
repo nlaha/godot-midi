@@ -66,7 +66,6 @@ note_materials = Array[Material]([SubResource("ShaderMaterial_2soq2"), SubResour
 [node name="MidiPlayer" type="MidiPlayer" parent="."]
 midi = ExtResource("3_a1dv0")
 loop = true
-manual_process = true
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(-0.392767, 0.353553, -0.848961, 0.480471, 0.866026, 0.138372, 0.784144, -0.353553, -0.510018, -2, 2, 2)
