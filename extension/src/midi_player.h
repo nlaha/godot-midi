@@ -106,6 +106,9 @@ private:
     /// @brief The audio output latency from the audio server
     double audio_output_latency = 0.0;
 
+    /// @brief Whether the audio stream player is linked
+    bool has_asp = false;
+
     void threaded_playback();
 
 public:

@@ -19,6 +19,7 @@ MidiPlayer::MidiPlayer()
     this->audio_output_latency = AudioServer::get_singleton()->get_output_latency();
 
     this->playback_thread = std::thread();
+    this->has_asp = false;
 }
 
 MidiPlayer::~MidiPlayer()
@@ -56,7 +57,7 @@ void MidiPlayer::play()
     this->playback_thread = std::thread(&MidiPlayer::threaded_playback, this);
 
     // if the audio stream player is set, start playing the audio
-    if (this->audio_stream_player != nullptr)
+    if (has_asp)
     {
         this->audio_stream_player->play();
     }
@@ -81,7 +82,7 @@ void MidiPlayer::stop()
     }
 
     // if the audio stream player is set, stop playing the audio
-    if (this->audio_stream_player != nullptr)
+    if (has_asp)
     {
         this->audio_stream_player->stop();
     }
@@ -102,7 +103,7 @@ void MidiPlayer::pause()
     UtilityFunctions::print("[GodotMidi] Paused");
 
     // if the audio stream player is set, pause the audio
-    if (this->audio_stream_player != nullptr)
+    if (has_asp)
     {
         this->audio_stream_player->set_stream_paused(true);
     }
@@ -115,7 +116,7 @@ void MidiPlayer::resume()
     UtilityFunctions::print("[GodotMidi] Resumed");
 
     // if the audio stream player is set, resume the audio
-    if (this->audio_stream_player != nullptr)
+    if (has_asp)
     {
         this->audio_stream_player->set_stream_paused(false);
     }
@@ -126,6 +127,7 @@ void MidiPlayer::resume()
 void MidiPlayer::link_audio_stream_player(AudioStreamPlayer *audio_stream_player)
 {
     this->audio_stream_player = audio_stream_player;
+    this->has_asp = true;
 }
 
 /// @brief Function that is run in a separate thread to play back the midi
@@ -144,7 +146,7 @@ void MidiPlayer::threaded_playback()
     {
         // get the delta from the audio stream player if it's set
         double delta = 0;
-        if (audio_stream_player != nullptr)
+        if (has_asp)
         {
             double time = audio_stream_player->get_playback_position() + AudioServer::get_singleton()->get_time_since_last_mix();
             time -= audio_output_latency;
