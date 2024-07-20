@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import sys
+from SCons.Script import *
 
 env = SConscript("godot-cpp/SConstruct")
 
