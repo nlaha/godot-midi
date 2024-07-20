@@ -1,9 +1,9 @@
-[gd_scene load_steps=17 format=3 uid="uid://cf5sqk6dd4esg"]
+[gd_scene load_steps=18 format=3 uid="uid://cf5sqk6dd4esg"]
 
 [ext_resource type="Script" path="res://music_vis.gd" id="1_7bol8"]
 [ext_resource type="Shader" path="res://note_vis_shader.gdshader" id="2_uwn88"]
-[ext_resource type="MidiResource" uid="uid://cdoihonl60es5" path="res://test_low_tempo.mid" id="3_a1dv0"]
-[ext_resource type="AudioStream" uid="uid://bss4i5wmt23sb" path="res://test_low_tempo.ogg" id="4_8knok"]
+[ext_resource type="MidiResource" uid="uid://bwk6t11415q6n" path="res://zeal.mid" id="3_qynsi"]
+[ext_resource type="AudioStream" uid="uid://bib56neltjbos" path="res://zeal.ogg" id="4_oj7jp"]
 [ext_resource type="AudioStream" uid="uid://btbw2a07sdp51" path="res://melee.wav" id="5_gkc6h"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_2soq2"]
@@ -59,13 +59,28 @@ ssao_enabled = true
 glow_enabled = true
 fog_light_color = Color(0, 0, 0, 1)
 
+[sub_resource type="GDScript" id="GDScript_keiq7"]
+resource_name = "pauseable"
+script/source = "extends Node
+
+@export var node: Node
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta):
+	if Input.is_action_just_pressed(\"ui_accept\"):
+		if (node):
+			node.get_tree().paused = !node.get_tree().paused
+			print(\"Setting pasued to \" + str(node.get_tree().paused))
+"
+
 [node name="Main" type="Node"]
 script = ExtResource("1_7bol8")
 note_materials = Array[Material]([SubResource("ShaderMaterial_2soq2"), SubResource("ShaderMaterial_33vtw"), SubResource("ShaderMaterial_jh5ke"), SubResource("ShaderMaterial_4arlw"), SubResource("ShaderMaterial_wg5fx"), SubResource("ShaderMaterial_gw6ig"), SubResource("ShaderMaterial_utwia"), SubResource("ShaderMaterial_grq4g")])
 
 [node name="MidiPlayer" type="MidiPlayer" parent="."]
-midi = ExtResource("3_a1dv0")
+midi = ExtResource("3_qynsi")
 loop = true
+process_mode = 3
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(-0.392767, 0.353553, -0.848961, 0.480471, 0.866026, 0.138372, 0.784144, -0.353553, -0.510018, -2, 2, 2)
@@ -81,9 +96,14 @@ size = Vector3(18, 0.1, 1)
 environment = SubResource("Environment_6map0")
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("4_8knok")
+stream = ExtResource("4_oj7jp")
 volume_db = -10.0
 autoplay = true
 
 [node name="SFX" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("5_gkc6h")
+
+[node name="PauseController" type="Node" parent="." node_paths=PackedStringArray("node")]
+process_mode = 3
+script = SubResource("GDScript_keiq7")
+node = NodePath("..")

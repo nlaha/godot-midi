@@ -16,7 +16,7 @@ func _ready():
 	# linking an ASP allows for async playback of audio with midi events
 	# for better syncing
 	midi_player.note.connect(on_note)
-	midi_player.link_audio_stream_player(asp)
+	midi_player.link_audio_stream_player([asp])
 	midi_player.play()
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -45,7 +45,7 @@ func on_note(event, track):
 	if (event['subtype'] == MIDI_MESSAGE_NOTE_ON): # note on
 		notes_on[event['note']] = track
 		print(event)
-		$SFX.play()
+		#$SFX.play()
 	elif (event['subtype'] == MIDI_MESSAGE_NOTE_OFF): # note off
 		notes_on.erase(event['note'])
 	#print("[Track: " + str(track) + "] Note on: " + str(event['note']))

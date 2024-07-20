@@ -17,6 +17,17 @@ MidiPlayer::MidiPlayer()
 
     this->playback_thread = std::thread();
     this->has_asp = false;
+
+    this->longest_asp = nullptr;
+    this->asps = std::vector<AudioStreamPlayer*>();
+
+    // disable process in the editor
+    if (Engine::get_singleton()->is_editor_hint())
+    {
+        set_process_mode(ProcessMode::PROCESS_MODE_DISABLED);
+    } else {
+        set_process_mode(ProcessMode::PROCESS_MODE_ALWAYS);
+    }
 }
 
 MidiPlayer::~MidiPlayer()
@@ -56,7 +67,10 @@ void MidiPlayer::play()
     // if the audio stream player is set, start playing the audio
     if (has_asp)
     {
-        this->audio_stream_player->play();
+        for (auto asp : this->asps)
+        {
+            asp->play();
+        }
     }
 }
 
@@ -81,7 +95,10 @@ void MidiPlayer::stop()
     // if the audio stream player is set, stop playing the audio
     if (has_asp)
     {
-        this->audio_stream_player->stop();
+        for (auto asp : this->asps)
+        {
+            asp->stop();
+        }
     }
 }
 
@@ -102,7 +119,10 @@ void MidiPlayer::pause()
     // if the audio stream player is set, pause the audio
     if (has_asp)
     {
-        this->audio_stream_player->set_stream_paused(true);
+        for (auto asp : this->asps)
+        {
+            asp->set_stream_paused(true);
+        }
     }
 }
 
@@ -115,16 +135,61 @@ void MidiPlayer::resume()
     // if the audio stream player is set, resume the audio
     if (has_asp)
     {
-        this->audio_stream_player->set_stream_paused(false);
+        for (auto asp : this->asps)
+        {
+            asp->set_stream_paused(false);
+        }
     }
 }
 
-/// @brief Links the audio stream player to the midi player
-/// @param audio_stream_player
-void MidiPlayer::link_audio_stream_player(AudioStreamPlayer *audio_stream_player)
+/// @brief Links the audio stream players to the midi player
+/// @param asps
+void MidiPlayer::link_audio_stream_player(Array asps)
 {
-    this->audio_stream_player = audio_stream_player;
-    this->has_asp = true;
+    // extract audio stream players from the array
+    this->asps.resize(asps.size());
+    double longest_time = 0;
+    for(int i = 0; i < asps.size(); i++)
+    {
+        AudioStreamPlayer* asp = Object::cast_to<AudioStreamPlayer>(asps[i]);
+        if (asp != nullptr)
+        {
+            // get the longest audio stream player
+            double time = asp->get_stream()->get_length();
+            if (time > longest_time)
+            {
+                longest_time = time;
+                this->longest_asp = asp;
+            }
+
+            this->asps[i] = asp;
+            this->has_asp = true;
+        }
+    }
+
+    longest_asp->connect("finished", Callable(this, "loop_or_stop_thread_safe"));
+}
+
+/// @brief Process function that is called every frame
+/// @param delta
+void MidiPlayer::_process(float delta)
+{
+    // check to make sure the scene tree isn't paused
+    if (this->get_tree()->is_paused())
+    {
+        if (this->state.load() == PlayerState::Playing)
+        {
+            // if it is, pause the player
+            this->pause();
+        }
+    } else {
+        // if the scene tree isn't paused, check if the player is paused
+        if (this->state.load() == PlayerState::Paused)
+        {
+            // and unpause if it is
+            this->resume();
+        }
+    }
 }
 
 /// @brief Function that is run in a separate thread to play back the midi
@@ -138,22 +203,24 @@ void MidiPlayer::threaded_playback()
 
     // print
     UtilityFunctions::print("[GodotMidi] Playback thread started");
-    const long long start_time = get_now();
-    while (state.load() == PlayerState::Playing)
+    double delta = 0;
+    while (state.load() == PlayerState::Playing || state.load() == PlayerState::Paused)
     {
+        const long long start_time = get_now();
+
+        if (state.load() == PlayerState::Paused)
+        {
+            // sleep for 1ms if we're paused
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            continue;
+        }
+
         // get the delta from the audio stream player if it's set
-        double delta = 0;
         if (has_asp)
         {
-            double time = audio_stream_player->get_playback_position() + AudioServer::get_singleton()->get_time_since_last_mix();
+            double time = longest_asp->get_playback_position() + AudioServer::get_singleton()->get_time_since_last_mix();
             time -= audio_output_latency;
             delta = time - current_time;
-        }
-        else
-        {
-            // if the audio stream player is not set, compute the delta manually
-            long long time_now = get_now();
-            delta = (static_cast<double>(time_now - start_time) / 1000000.0) - current_time;
         }
 
         // delta should never be negative
@@ -167,7 +234,30 @@ void MidiPlayer::threaded_playback()
             // sleep for 1ms if we're going too fast
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
+
+        if (!has_asp)
+        {
+            // if the audio stream player is not set, compute the delta manually
+            long long time_now = get_now();
+            delta = static_cast<double>(time_now - start_time) / 1000000.0;
+        }
     }
+}
+
+/// @brief Loop the midi player or stop it if looping is disabled
+void MidiPlayer::loop_or_stop_thread_safe()
+{
+    if (this->loop == false)
+    {
+        this->call_thread_safe("stop");
+        UtilityFunctions::print("[GodotMidi] Finished, stopping");
+        return;
+    }
+    // set state to stopped, this prevents issues while waiting for
+    // the below function to sync with the main thread
+    this->state.store(PlayerState::Stopped);
+    this->call_thread_safe("loop_internal");
+    UtilityFunctions::print("[GodotMidi] Finished, looping");
 }
 
 /// @brief Process one delta of time for the midi player
@@ -212,6 +302,7 @@ void MidiPlayer::process_delta(double delta)
 
             // convert to seconds for ease of use
             double event_delta_seconds = event_delta / 1000000.0;
+            event_delta_seconds /= speed_scale;
             double event_absolute_time = event_delta_seconds + static_cast<double>(this->prev_track_times[i]);
 
             if (this->current_time >= event_absolute_time)
@@ -274,20 +365,10 @@ void MidiPlayer::process_delta(double delta)
 
     if (has_more_events == false)
     {
-        if (this->loop == false)
-        {
-            this->call_thread_safe("stop");
-            UtilityFunctions::print("[GodotMidi] Finished, stopping");
-            return;
-        }
-        // set state to stopped, this prevents issues while waiting for
-        // the below function to sync with the main thread
-        this->state.store(PlayerState::Stopped);
-        this->call_thread_safe("loop_internal");
-        UtilityFunctions::print("[GodotMidi] Finished, looping");
+        loop_or_stop_thread_safe();
     }
 
     // increment time, current time will hold the
     // number of seconds since starting
-    this->current_time += delta * speed_scale;
+    this->current_time += delta;
 }

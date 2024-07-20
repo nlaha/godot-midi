@@ -79,7 +79,9 @@ The good news: it's easy to use! Just call `link_audio_stream_player(...)` with 
 
       # link the AudioStreamPlayer in your scene
       # that contains the music associated with the midi
-      midi_player.link_audio_stream_player(asp)
+      # NOTE: this must be an array, you can link multiple ASPs or one as 
+      # shown below and they will all sync with playback of the MIDI
+      midi_player.link_audio_stream_player([asp])
 
       # this will also start the audio stream player (music)
       midi_player.play()

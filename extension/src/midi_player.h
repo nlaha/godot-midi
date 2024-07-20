@@ -16,6 +16,8 @@
 #include <godot_cpp/classes/audio_stream_player.hpp>
 #include <godot_cpp/classes/audio_server.hpp>
 #include <godot_cpp/classes/time.hpp>
+#include <godot_cpp/classes/scene_tree.hpp>
+#include <godot_cpp/classes/audio_stream.hpp>
 
 #include <thread>
 
@@ -66,6 +68,7 @@ protected:
         ClassDB::bind_method(D_METHOD("process_delta", "delta"), &MidiPlayer::process_delta);
 
         ClassDB::bind_method(D_METHOD("loop_internal"), &MidiPlayer::loop_internal);
+        ClassDB::bind_method(D_METHOD("loop_or_stop_thread_safe"), &MidiPlayer::loop_or_stop_thread_safe);
 
         ADD_SIGNAL(MethodInfo("finished"));
 
@@ -97,18 +100,21 @@ private:
     Array prev_track_times;
     
     /// @brief The linked AudioStreamPlayer (optional)
-    AudioStreamPlayer* audio_stream_player;
+    std::vector<AudioStreamPlayer*> asps;
+    AudioStreamPlayer* longest_asp;
 
     /// @brief The playback thread for playing back the midi on a separate thread
     std::thread playback_thread;
     
     /// @brief The audio output latency from the audio server
-    double audio_output_latency = 0.0;
+    double audio_output_latency;
 
     /// @brief Whether the audio stream player is linked
-    bool has_asp = false;
+    bool has_asp ;
 
     void threaded_playback();
+
+    void loop_or_stop_thread_safe();
 
 public:
     void process_delta(double delta);
@@ -122,7 +128,10 @@ public:
     void resume();
     void loop_internal();
 
-    void link_audio_stream_player(AudioStreamPlayer* audio_stream_player);
+    // process
+    void _process(float delta);
+
+    void link_audio_stream_player(Array asps);
 
     double get_speed_scale()
     {
