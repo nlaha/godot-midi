@@ -1,0 +1,14 @@
+[remap]
+
+importer="com.nlaha.godotmidi"
+type="MidiResource"
+uid="uid://cdoihonl60es5"
+path="res://.godot/imported/test_low_tempo.mid-82dc560b100e2609138136f5885f8df2.res"
+
+[deps]
+
+source_file="res://test_low_tempo.mid"
+dest_files=["res://.godot/imported/test_low_tempo.mid-82dc560b100e2609138136f5885f8df2.res"]
+
+[params]
+

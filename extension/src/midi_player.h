@@ -13,6 +13,13 @@
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/callable.hpp>
 #include <godot_cpp/classes/engine.hpp>
+#include <godot_cpp/classes/audio_stream_player.hpp>
+#include <godot_cpp/classes/audio_server.hpp>
+#include <godot_cpp/classes/time.hpp>
+#include <godot_cpp/classes/scene_tree.hpp>
+#include <godot_cpp/classes/audio_stream.hpp>
+
+#include <thread>
 
 #include "midi_resource.h"
 #include "midi_parser.h"
@@ -41,6 +48,7 @@ protected:
         ClassDB::bind_method(D_METHOD("play"), &MidiPlayer::play);
         ClassDB::bind_method(D_METHOD("stop"), &MidiPlayer::stop);
         ClassDB::bind_method(D_METHOD("pause"), &MidiPlayer::pause);
+        ClassDB::bind_method(D_METHOD("resume"), &MidiPlayer::resume);
         ClassDB::bind_method(D_METHOD("get_state"), &MidiPlayer::get_state);
 
         ClassDB::bind_method(D_METHOD("get_current_time"), &MidiPlayer::get_current_time);
@@ -51,15 +59,16 @@ protected:
         ClassDB::bind_method(D_METHOD("set_loop", "loop"), &MidiPlayer::set_loop);
         ADD_PROPERTY(PropertyInfo(Variant::BOOL, "loop"), "set_loop", "get_loop");
 
-        ClassDB::bind_method(D_METHOD("get_manual_process"), &MidiPlayer::get_manual_process);
-        ClassDB::bind_method(D_METHOD("set_manual_process", "manual_process"), &MidiPlayer::set_manual_process);
-        ADD_PROPERTY(PropertyInfo(Variant::BOOL, "manual_process"), "set_manual_process", "get_manual_process");
-
         ClassDB::bind_method(D_METHOD("get_speed_scale"), &MidiPlayer::get_speed_scale);
         ClassDB::bind_method(D_METHOD("set_speed_scale", "speed_scale"), &MidiPlayer::set_speed_scale);
         ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "speed_scale"), "set_speed_scale", "get_speed_scale");
 
+        ClassDB::bind_method(D_METHOD("link_audio_stream_player", "audio_stream_player"), &MidiPlayer::link_audio_stream_player);
+
         ClassDB::bind_method(D_METHOD("process_delta", "delta"), &MidiPlayer::process_delta);
+
+        ClassDB::bind_method(D_METHOD("loop_internal"), &MidiPlayer::loop_internal);
+        ClassDB::bind_method(D_METHOD("loop_or_stop_thread_safe"), &MidiPlayer::loop_or_stop_thread_safe);
 
         ADD_SIGNAL(MethodInfo("finished"));
 
@@ -73,7 +82,7 @@ private:
     Ref<MidiResource> midi;
 
     /// @brief The current state of the player
-    PlayerState state;
+    std::atomic<PlayerState> state;
 
     /// @brief The current time in seconds
     double current_time;
@@ -84,17 +93,30 @@ private:
     /// @brief Whether to loop the midi playback
     bool loop;
 
-    /// @brief Whether to manually process the midi playback
-    bool manual_process;
-
     /// @brief The speed scale of the midi playback (1.0 = normal speed, 2.0 = double speed, 0.5 = half speed, etc.)
     double speed_scale;
 
     /// @brief Track previous time for delta calculation
     Array prev_track_times;
+    
+    /// @brief The linked AudioStreamPlayer (optional)
+    std::vector<AudioStreamPlayer*> asps;
+    AudioStreamPlayer* longest_asp;
+
+    /// @brief The playback thread for playing back the midi on a separate thread
+    std::thread playback_thread;
+    
+    /// @brief The audio output latency from the audio server
+    double audio_output_latency;
+
+    /// @brief Whether the audio stream player is linked
+    bool has_asp ;
+
+    void threaded_playback();
+
+    void loop_or_stop_thread_safe();
 
 public:
-    virtual void _process(double delta) override;
     void process_delta(double delta);
 
     MidiPlayer();
@@ -103,15 +125,17 @@ public:
     void play();
     void stop();
     void pause();
+    void resume();
+    void loop_internal();
+
+    // process
+    void _process(float delta);
+
+    void link_audio_stream_player(Array asps);
 
     double get_speed_scale()
     {
         return this->speed_scale;
-    };
-
-    bool get_manual_process()
-    {
-        return this->manual_process;
     };
 
     bool get_loop()
@@ -121,7 +145,7 @@ public:
 
     int get_state()
     {
-        return (int)this->state;
+        return (int)this->state.load();
     };
 
     double get_current_time()
@@ -134,16 +158,13 @@ public:
         this->speed_scale = speed_scale;
     };
 
-    void set_manual_process(bool manual_process)
-    {
-        this->manual_process = manual_process;
-    };
-
     void set_loop(bool loop)
     {
         this->loop = loop;
     };
 
+    /// @brief Sets the current time and updates the track index offsets
+    /// @param current_time 
     void set_current_time(double current_time)
     {
         this->current_time = current_time;

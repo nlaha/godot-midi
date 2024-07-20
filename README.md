@@ -68,43 +68,23 @@ This GDExtension addon is only compatible with Godot version 4.1.2 and higher.
 
 ## Manual Process (Syncing with Music)
 
-Godot Midi supports two sync modes, **automatic process** and **manual process**. The example above shows automatic process, this is great for use cases where you don't need to sync midi playback with an audio player or a game system. However, in rhythm games and other time-sensitive projects, it's recommended you use manual process. Manual process allows you to "tick" the midi player with an arbitrary delta time value. Below is an example of manual process being used to sync an audio stream player
+Because the game thread frame time can fluctuate depending on the system load, GodotMidi's player is run on a separate thread. Because of this, it's best to use the built-in synchronization feature if you want to sync MIDI events to music.
 
-Note the mechanism for looping the audio and midi. Because Godot doesn't have a signal for detecting when the AudioStreamPlayer has looped, we need to manually implement looping logic for both the midi and the music.
+The good news: it's easy to use! Just call `link_audio_stream_player(...)` with your ASP and it will automatically start/stop/pause the ASP for you!
 
 ```gdscript
    func _ready():
+      midi_player.loop = true
       midi_player.note.connect(my_note_callback)
-      midi_player.manual_process = true
+
+      # link the AudioStreamPlayer in your scene
+      # that contains the music associated with the midi
+      # NOTE: this must be an array, you can link multiple ASPs or one as 
+      # shown below and they will all sync with playback of the MIDI
+      midi_player.link_audio_stream_player([asp])
+
+      # this will also start the audio stream player (music)
       midi_player.play()
-
-   	if loop:
-   		asp.finished.connect(on_loop)
-
-   func on_loop():
-   	# loop midi player
-   	print("Looping MIDI")
-   	last_time = 0
-   	midi_player.stop() # resets time and other important variables
-   	midi_player.play() # plays midi
-
-   	# play audio stream
-   	asp.play()
-
-   # Called every frame. 'delta' is the elapsed time since the previous frame.
-   func _process(delta):
-
-      # get asp playback time
-      var time = asp.get_playback_position() + AudioServer.get_time_since_last_mix()
-      # Compensate for output latency.
-      time -= AudioServer.get_output_latency()
-
-      # tick the midi player with the delta from our audio stream player
-      # this syncs the midi player with the audio server
-      # this is a more accurate way of doing it than using the delta from _process
-      var asp_delta = time - last_time
-      last_time = time
-      midi_player.process_delta(asp_delta)
 
    func my_note_callback(event, track):
       if (event['subtype'] == MIDI_MESSAGE_NOTE_ON): # note on
