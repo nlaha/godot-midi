@@ -66,7 +66,7 @@ This GDExtension addon is only compatible with Godot version 4.1.2 and higher.
 
    ```
 
-## Manual Process (Syncing with Music)
+## Syncing with Music (AudioStreamPlayer)
 
 Because the game thread frame time can fluctuate depending on the system load, GodotMidi's player is run on a separate thread. Because of this, it's best to use the built-in synchronization feature if you want to sync MIDI events to music.
 
