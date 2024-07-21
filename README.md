@@ -10,7 +10,7 @@ https://github.com/nlaha/godot-midi/assets/10292944/543646ec-ed45-406b-a3e5-f2b2
 
 ## Compatibility
 
-This GDExtension addon is only compatible with Godot version 4.1.2 and higher.
+This GDExtension addon is compatible with Godot version 4.2.2 and higher. Earlier 4.x versions may work, however they are not officially supported.
 
 ## Installation from binaries
 
