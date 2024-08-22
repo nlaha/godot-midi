@@ -27,7 +27,7 @@ jobs:
     #   - https://gh.io/supported-runners-and-hardware-resources
     #   - https://gh.io/using-larger-runners (GitHub.com only)
     # Consider using larger runners or machines with greater resources for possible analysis time improvements.
-    runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+    runs-on: [self-hosted]
     permissions:
       # required for all workflows
       security-events: write
@@ -94,13 +94,13 @@ jobs:
     - name: Compile godot-cpp
       shell: sh
       run: |
-        scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}'
+        scons target='template_release' platform='linux' arch='x86_64'
       working-directory: godot-cpp
 
     - name: Compile Extension
       shell: sh
       run: |
-        scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}'
+        scons target='template_release' platform='linux' arch='x86_64'
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
