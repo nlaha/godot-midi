@@ -58,6 +58,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
@@ -84,17 +86,21 @@ jobs:
         python -m pip install scons==4.5.2
         scons --version
 
-    # If the analyze step fails for one of the languages you are analyzing with
-    # "We were unable to automatically build your code", modify the matrix above
-    # to set the build mode to "manual" for that language. Then modify this step
-    # to build your code.
-    # ℹ️ Command-line programs to run using the OS shell.
-    # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
-    - if: matrix.build-mode == 'manual'
-      shell: bash
+    - name: Linux dependencies
       run: |
-        scons target=template_release
-        exit 0
+        sudo apt-get update -qq
+        sudo apt-get install -qqq build-essential pkg-config
+
+    - name: Compile godot-cpp
+      shell: sh
+      run: |
+        scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}'
+      working-directory: godot-cpp
+
+    - name: Compile Extension
+      shell: sh
+      run: |
+        scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}'
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
