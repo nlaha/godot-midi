@@ -1,5 +1,8 @@
 ![banner_logo_long](https://github.com/nlaha/godot-midi/assets/10292944/4e5b5125-0453-4f92-9ac7-048cfb2c8067)
 
+[![Builds](https://github.com/nlaha/godot-midi/actions/workflows/builds.yml/badge.svg)](https://github.com/nlaha/godot-midi/actions/workflows/builds.yml)
+[![CodeQL](https://github.com/nlaha/godot-midi/actions/workflows/codeql.yml/badge.svg)](https://github.com/nlaha/godot-midi/actions/workflows/codeql.yml)
+
 ## Overview
 
 This plugin aims to make rhythm game development and music syncing easier than ever before. Import a midi file like you would any other Godot asset, this can then be paired with a "MidiPlayer" node that sends out signals every time a midi event is fired. This project is a work in progress and lacks some features, so feel free to contribute any code or ideas on the pull requests page.
