@@ -65,7 +65,7 @@ void MidiPlayer::play()
     this->playback_thread = std::thread(&MidiPlayer::threaded_playback, this);
 
     // if the audio stream player is set, start playing the audio
-    if (has_asp)
+    if (this->has_asp)
     {
         for (auto asp : this->asps)
         {
@@ -93,7 +93,7 @@ void MidiPlayer::stop()
     }
 
     // if the audio stream player is set, stop playing the audio
-    if (has_asp)
+    if (this->has_asp && this->auto_stop)
     {
         for (auto asp : this->asps)
         {
@@ -117,7 +117,7 @@ void MidiPlayer::pause()
     UtilityFunctions::print("[GodotMidi] Paused");
 
     // if the audio stream player is set, pause the audio
-    if (has_asp)
+    if (this->has_asp)
     {
         for (auto asp : this->asps)
         {
@@ -133,7 +133,7 @@ void MidiPlayer::resume()
     UtilityFunctions::print("[GodotMidi] Resumed");
 
     // if the audio stream player is set, resume the audio
-    if (has_asp)
+    if (this->has_asp)
     {
         for (auto asp : this->asps)
         {
@@ -216,7 +216,7 @@ void MidiPlayer::threaded_playback()
         }
 
         // get the delta from the audio stream player if it's set
-        if (has_asp)
+        if (this->has_asp)
         {
             double time = longest_asp->get_playback_position() + AudioServer::get_singleton()->get_time_since_last_mix();
             time -= audio_output_latency;
@@ -235,7 +235,7 @@ void MidiPlayer::threaded_playback()
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
 
-        if (!has_asp)
+        if (!this->has_asp)
         {
             // if the audio stream player is not set, compute the delta manually
             long long time_now = get_now();

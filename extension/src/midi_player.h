@@ -112,6 +112,9 @@ private:
     /// @brief Whether the audio stream player is linked
     bool has_asp ;
 
+    /// @brief Whether to automatically stop the audio stream player when the midi player stops
+    bool auto_stop = true;
+
     void threaded_playback();
 
     void loop_or_stop_thread_safe();
