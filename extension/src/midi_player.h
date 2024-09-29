@@ -63,6 +63,10 @@ protected:
         ClassDB::bind_method(D_METHOD("set_speed_scale", "speed_scale"), &MidiPlayer::set_speed_scale);
         ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "speed_scale"), "set_speed_scale", "get_speed_scale");
 
+        ClassDB::bind_method(D_METHOD("get_auto_stop"), &MidiPlayer::get_auto_stop);
+        ClassDB::bind_method(D_METHOD("set_auto_stop", "auto_stop"), &MidiPlayer::set_auto_stop);
+        ADD_PROPERTY(PropertyInfo(Variant::BOOL, "auto_stop"), "set_auto_stop", "get_auto_stop");
+
         ClassDB::bind_method(D_METHOD("link_audio_stream_player", "audio_stream_player"), &MidiPlayer::link_audio_stream_player);
 
         ClassDB::bind_method(D_METHOD("process_delta", "delta"), &MidiPlayer::process_delta);
@@ -135,6 +139,16 @@ public:
     void _process(float delta);
 
     void link_audio_stream_player(Array asps);
+
+    bool get_auto_stop()
+    {
+        return this->auto_stop;
+    };
+
+    void set_auto_stop(bool auto_stop)
+    {
+        this->auto_stop = auto_stop;
+    };
 
     double get_speed_scale()
     {
