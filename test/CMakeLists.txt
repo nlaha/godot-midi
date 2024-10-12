@@ -37,7 +37,7 @@ set(godot_cpp_DIR ${CMAKE_SOURCE_DIR}/../godot-cpp)
 if (UNIX)
     if (CMAKE_SIZEOF_VOID_P EQUAL 4)
         find_library(GodotCPP_LIBRARY
-            NAMES libgodot-cpp.linux.template_debug.x86_32.a
+            NAMES libgodot-cpp.linux.template_debug.x86_32.so
             PATHS ${godot_cpp_DIR}/bin
         )
         find_library(GodotMidi_LIBRARY
@@ -46,7 +46,7 @@ if (UNIX)
         )
     else()
         find_library(GodotCPP_LIBRARY
-            NAMES libgodot-cpp.linux.template_debug.x86_64.a
+            NAMES libgodot-cpp.linux.template_debug.x86_64.so
             PATHS ${godot_cpp_DIR}/bin
         )
         find_library(GodotMidi_LIBRARY
@@ -57,7 +57,7 @@ if (UNIX)
 elseif (WIN32)
     if (CMAKE_SIZEOF_VOID_P EQUAL 4)
         find_library(GodotCPP_LIBRARY
-            NAMES libgodot-cpp.windows.template_debug.x86_32.a
+            NAMES libgodot-cpp.windows.template_debug.x86_32.lib
             PATHS ${godot_cpp_DIR}/bin
         )
         find_library(GodotMidi_LIBRARY
@@ -70,7 +70,7 @@ elseif (WIN32)
         )
     else()
         find_library(GodotCPP_LIBRARY
-            NAMES libgodot-cpp.windows.template_debug.x86_64.a
+            NAMES libgodot-cpp.windows.template_debug.x86_64.lib
             PATHS ${godot_cpp_DIR}/bin
         )
         find_library(GodotMidi_LIBRARY
