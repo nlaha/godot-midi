@@ -43,11 +43,9 @@ extension_api_json: ## Dump extension_api.json for current version of Godot
 -----: ## ----- Godot-CPP builds -----
 
 godot_cpp_linux: extension_api_json ## Build Godot CPP in Linux
-	@cd godot-cpp && scons platform=linux arch=x86_32
 	@cd godot-cpp && scons platform=linux arch=x86_64
 
 godot_cpp_linux_debug: extension_api_json ## Build Godot CPP in Linux with extra debugging
-	@cd godot-cpp && scons platform=linux arch=x86_32 debug_symbols=true
 	@cd godot-cpp && scons platform=linux arch=x86_64 debug_symbols=true
 
 godot_cpp_mac: extension_api_json ## Build Godot CPP in MacOS
@@ -57,32 +55,24 @@ godot_cpp_mac_debug: extension_api_json ## Build Godot CPP in MacOS with extra d
 	@cd godot-cpp && scons platform=macos arch=universal debug_symbols=true
 
 godot_cpp_windows: extension_api_json ## Build Godot CPP in Windows
-	@cd godot-cpp && scons platform=windows arch=x86_32
-	@cd godot-cpp && scons platform=windows arch=x86_64
+	@cd godot-cpp && scons platform=windows arch=x86_64 use_mingw=true
 
 godot_cpp_windows_debug: extension_api_json ## Build Godot CPP in Windows with extra debugging
-	@cd godot-cpp && scons platform=windows arch=x86_32 debug_symbols=true
-	@cd godot-cpp && scons platform=windows arch=x86_64 debug_symbols=true
+	@cd godot-cpp && scons platform=windows arch=x86_64 use_mingw=true debug_symbols=true
 
 -----: ## ----- GDExtension builds -----
 
 gdextension_linux_debug: ## Build GDExtensions (Debug) for Linux.
-	@#scons platform=linux target=template_debug arch=x86_32 debug_symbols=true
 	scons platform=linux target=template_debug arch=x86_64 debug_symbols=true
-	@echo "\nBuild the 32-bit extension manually to avoid tripping the stack smashing bug.\n\tscons platform=linux target=template_debug arch=x86_32 debug_symbols=true"
 
 gdextension_linux_release: ## Build GDExtensions (Release) for Linux.
-	scons platform=linux target=template_release arch=x86_32
 	scons platform=linux target=template_release arch=x86_64
 
 gdextension_windows_debug: ## Build GDExtensions (Debug) for Windows.
 	scons platform=windows target=template_debug arch=x86_64 debug_symbols=true
-	@powershell -Command "& {Write-Output \"Build the 32-bit extension manually to avoid tripping the stack smashing bug. scons platform=windows target=template_debug arch=x86_32 debug_symbols=true\"}";
 
 gdextension_windows_release: ## Build GDExtensions (release) for Windows.
-	scons platform=windows target=template_release arch=x86_32
 	scons platform=windows target=template_release arch=x86_64
-
 -----: ## ----- Tests -----
 
 tests: ## Run doctest unit tests for the GDExtension

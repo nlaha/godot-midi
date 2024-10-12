@@ -77,6 +77,12 @@ void MidiPlayer::play()
 /// @brief Stop the midi playback and reset the clock
 void MidiPlayer::stop()
 {
+    stop_internal(this->auto_stop);
+}
+
+/// @brief Internal function for stopping the midi playback
+void MidiPlayer::stop_internal(bool stop_asp = true)
+{
     // reset time to zero
     this->current_time = 0;
     this->prev_track_times.clear();
@@ -106,7 +112,8 @@ void MidiPlayer::stop()
 /// and the midi has finished playing
 void MidiPlayer::loop_internal()
 {
-    this->stop();
+    // always auto stop when looping
+    this->stop_internal(true);
     this->play();
 }
 

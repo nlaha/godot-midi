@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.22.1)
 project(godot_midi_test VERSION 0.0.1 LANGUAGES CXX)
 
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
+
 #########################
 ##### Setup Doctest #####
 #########################
@@ -117,10 +119,10 @@ include_directories(${godot_cpp_dir})
 add_library(GodotMidi SHARED IMPORTED)
 set_target_properties(GodotMidi PROPERTIES IMPORTED_LOCATION ${GodotMidi_LIBRARY})
 set_target_properties(GodotMidi PROPERTIES IMPORTED_IMPLIB ${GodotMidi_DLL})
-target_include_directories(GodotMidi INTERFACE ${godot_midi_SRC}/src)
+target_include_directories(GodotMidi INTERFACE ${gdexample_DIR}/src)
 
 add_dependencies(GodotMidi Godot_CPP)
-include_directories(${godot_midi_SRC}/src)
+include_directories(${gdexample_DIR}/src)
 
 get_target_property(GDEXAMPLE_INCLUDE_DIRS GodotMidi INTERFACE_INCLUDE_DIRECTORIES)
 message(STATUS "GodotMidi Include Directories: ${GDEXAMPLE_INCLUDE_DIRS}")
@@ -128,7 +130,7 @@ message(STATUS "GodotMidi Include Directories: ${GDEXAMPLE_INCLUDE_DIRS}")
 #############################
 ##### Build test binary #####
 #############################
-add_executable(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/src/test_godot_midi.cpp)
+add_executable(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/src/test_godo_midi.cpp)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 target_link_libraries(${PROJECT_NAME}
     PUBLIC GodotMidi

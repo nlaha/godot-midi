@@ -56,7 +56,7 @@ if env["platform"] == "macos":
     platlibname = "{}.{}.{}".format(libname, env["platform"], env["target"])
     file = "{}.framework/{}".format(env["platform"], platlibname, platlibname)
 
-libraryfile = "{}/addons/godot_midi/bin/{}/{}".format(projectdir, env["platform"], file)
+libraryfile = "bin/{}/{}".format(env["platform"], file)
 print("CCFLAGS: ", env['CCFLAGS'])
 
 library = env.SharedLibrary(

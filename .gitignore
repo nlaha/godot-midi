@@ -2,6 +2,9 @@
 .godot/
 game/addons/godot_midi/bin/*
 .sconsign*.dblite
+/bin
+
+.idea/
 
 # Binaries
 *.o
