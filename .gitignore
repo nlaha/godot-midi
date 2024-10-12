@@ -2,6 +2,9 @@
 .godot/
 game/addons/godot_midi/bin/*
 .sconsign*.dblite
+/bin
+
+.idea/
 
 # Binaries
 *.o
@@ -22,3 +25,15 @@ game/addons/godot_midi/bin/*
 *.exp
 
 tests/bin/*
+
+# CMake build
+.cmake/**
+!.cmake/.gitkeep
+
+# Other stuff
+*.log
+
+# GDExtension development
+extension_api.json
+
+*.exe

@@ -133,7 +133,9 @@ public:
     void stop();
     void pause();
     void resume();
+
     void loop_internal();
+    void stop_internal(bool stop_asp);
 
     // process
     void _process(float delta);
