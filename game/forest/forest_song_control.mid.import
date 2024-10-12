@@ -1,0 +1,14 @@
+[remap]
+
+importer="com.nlaha.godotmidi"
+type="MidiResource"
+uid="uid://cxfl6ncwyra6n"
+path="res://.godot/imported/forest_song_control.mid-17b4fa3f303e683aff5e7ba79e020832.res"
+
+[deps]
+
+source_file="res://forest/forest_song_control.mid"
+dest_files=["res://.godot/imported/forest_song_control.mid-17b4fa3f303e683aff5e7ba79e020832.res"]
+
+[params]
+
