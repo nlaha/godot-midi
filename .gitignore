@@ -22,3 +22,15 @@ game/addons/godot_midi/bin/*
 *.exp
 
 tests/bin/*
+
+# CMake build
+.cmake/**
+!.cmake/.gitkeep
+
+# Other stuff
+*.log
+
+# GDExtension development
+extension_api.json
+
+*.exe
