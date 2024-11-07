@@ -18,6 +18,7 @@ This GDExtension addon is compatible with Godot version 4.2.2 and higher. Earlie
 ## Installation from binaries
 
 1. Download the latest release from https://github.com/nlaha/godot-midi/releases
+> If you'd like to download a newer version that hasn't been released, download it from the latest Github Actions run: https://github.com/nlaha/godot-midi/actions/workflows/builds.yml
 
 2. Copy the `godot-midi` folder to your project's `addons` folder
 3. Enable the addon in Godot's project settings
