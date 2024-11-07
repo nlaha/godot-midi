@@ -259,6 +259,8 @@ void MidiPlayer::threaded_playback()
 /// @brief Loop the midi player or stop it if looping is disabled
 void MidiPlayer::loop_or_stop_thread_safe()
 {
+    this->emit_signal("finished");
+
     if (this->loop == false)
     {
         this->call_thread_safe("stop");
@@ -269,7 +271,6 @@ void MidiPlayer::loop_or_stop_thread_safe()
     // the below function to sync with the main thread
     this->state.store(PlayerState::Stopped);
     this->call_thread_safe("loop_internal");
-    this->emit_signal("finished");
     UtilityFunctions::print("[GodotMidi] Finished, looping");
 }
 
