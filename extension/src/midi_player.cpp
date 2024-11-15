@@ -210,7 +210,7 @@ void MidiPlayer::threaded_playback()
     // Lambda function to get the current time in microseconds
     const auto get_now = []() -> long long
     {
-        return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        return Time::get_singleton()->get_ticks_usec();
     };
 
     // print
