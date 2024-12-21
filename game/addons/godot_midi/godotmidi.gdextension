@@ -2,6 +2,7 @@
 
 entry_symbol = "godotmidi_library_init"
 compatibility_minimum = 4.2
+android_aar_plugin = true
 
 [libraries]
 

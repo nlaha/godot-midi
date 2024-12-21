@@ -3,6 +3,7 @@
 game/addons/godot_midi/bin/*
 .sconsign*.dblite
 /bin
+.gradle/
 
 .idea/
 
@@ -29,6 +30,9 @@ tests/bin/*
 # CMake build
 .cmake/**
 !.cmake/.gitkeep
+extension/build/
+extension/.cxx/
+extension/src/main/
 
 # Other stuff
 *.log
