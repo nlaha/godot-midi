@@ -278,7 +278,18 @@ MidiParser::MidiEventMeta::MidiEventMeta(double delta, PackedByteArray data) : M
         // set end of track flag
         this->meta_data = true;
     }
-    default:
+    case MidiEventMeta::MidiMetaEventType::SequenceNumber:
+    case MidiEventMeta::MidiMetaEventType::TextEvent:
+    case MidiEventMeta::MidiMetaEventType::CopyRightNotice:
+    case MidiEventMeta::MidiMetaEventType::SequenceOrTrackName:
+    case MidiEventMeta::MidiMetaEventType::InstrumentName:
+    case MidiEventMeta::MidiMetaEventType::Lyric:
+    case MidiEventMeta::MidiMetaEventType::Marker:
+    case MidiEventMeta::MidiMetaEventType::CuePoint:
+    case MidiEventMeta::MidiMetaEventType::ProgramName:
+    case MidiEventMeta::MidiMetaEventType::DeviceName:
+    case MidiEventMeta::MidiMetaEventType::ArtistName:
+    case MidiEventMeta::MidiMetaEventType::SMPTEOffset:
     {
         // unknown meta event
         break;

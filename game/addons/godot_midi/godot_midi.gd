@@ -5,6 +5,7 @@ const MainView = preload("./views/main_view.tscn")
 
 var import_plugin
 var main_view
+var export_plugin : AndroidExportPlugin
 
 func _enter_tree():
 	import_plugin = preload("midi_import_plugin.gd").new()
@@ -17,6 +18,10 @@ func _enter_tree():
 		# Hide the main panel. Very much required.
 		_make_visible(false)
 
+	export_plugin = AndroidExportPlugin.new()
+	add_export_plugin(export_plugin)
+
+
 func _exit_tree():
 	remove_import_plugin(import_plugin)
 	import_plugin = null
@@ -24,16 +29,41 @@ func _exit_tree():
 	if is_instance_valid(main_view):
 		main_view.queue_free()
 
+	remove_export_plugin(export_plugin)
+	export_plugin = null
+
+
 func _has_main_screen():
 	return true
-	
+
+
 func _make_visible(visible):
 	if is_instance_valid(main_view):
 		main_view.visible = visible
 
+
 func _get_plugin_name():
 	return "Godot Midi"
+
 
 func _get_plugin_icon():
 	# Must return some kind of Texture for the icon.
 	return get_editor_interface().get_base_control().get_theme_icon("AudioStreamPolyphonic", "EditorIcons")
+
+
+class AndroidExportPlugin extends EditorExportPlugin:
+	var _plugin_name = "GodotMidi"
+
+	func _supports_platform(platform):
+		if platform is EditorExportPlatformAndroid:
+			return true
+		return false
+
+	func _get_android_libraries(platform, debug):
+		if debug:
+			return PackedStringArray(["godot_midi/bin/GodotMidi-debug.aar"])
+		else:
+			return PackedStringArray(["godot_midi/bin/GodotMidi-release.aar"])
+
+	func _get_name():
+		return _plugin_name
