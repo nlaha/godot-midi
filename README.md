@@ -15,9 +15,15 @@ https://github.com/nlaha/godot-midi/assets/10292944/543646ec-ed45-406b-a3e5-f2b2
 
 This GDExtension addon is compatible with Godot version 4.2.2 and higher. Earlier 4.x versions may work, however they are not officially supported.
 
+### Platforms
+
+This extension is compatible with Windows, Mac and Linux. Support for Android is also availble but is not yet integrated into the CI pipelines. For more information on how to compile for Android, see this pull request:
+https://github.com/nlaha/godot-midi/pull/35
+
 ## Installation from binaries
 
 1. Download the latest release from https://github.com/nlaha/godot-midi/releases
+> If you'd like to download a newer version that hasn't been released, download it from the latest Github Actions run: https://github.com/nlaha/godot-midi/actions/workflows/builds.yml
 
 2. Copy the `godot-midi` folder to your project's `addons` folder
 3. Enable the addon in Godot's project settings

@@ -19,13 +19,15 @@ MidiPlayer::MidiPlayer()
     this->has_asp = false;
 
     this->longest_asp = nullptr;
-    this->asps = std::vector<AudioStreamPlayer*>();
+    this->asps = std::vector<AudioStreamPlayer *>();
 
     // disable process in the editor
     if (Engine::get_singleton()->is_editor_hint())
     {
         set_process_mode(ProcessMode::PROCESS_MODE_DISABLED);
-    } else {
+    }
+    else
+    {
         set_process_mode(ProcessMode::PROCESS_MODE_ALWAYS);
     }
 }
@@ -156,9 +158,9 @@ void MidiPlayer::link_audio_stream_player(Array asps)
     // extract audio stream players from the array
     this->asps.resize(asps.size());
     double longest_time = 0;
-    for(int i = 0; i < asps.size(); i++)
+    for (int i = 0; i < asps.size(); i++)
     {
-        AudioStreamPlayer* asp = Object::cast_to<AudioStreamPlayer>(asps[i]);
+        AudioStreamPlayer *asp = Object::cast_to<AudioStreamPlayer>(asps[i]);
         if (asp != nullptr)
         {
             // get the longest audio stream player
@@ -189,7 +191,9 @@ void MidiPlayer::_process(float delta)
             // if it is, pause the player
             this->pause();
         }
-    } else {
+    }
+    else
+    {
         // if the scene tree isn't paused, check if the player is paused
         if (this->state.load() == PlayerState::Paused)
         {
@@ -204,8 +208,9 @@ void MidiPlayer::_process(float delta)
 void MidiPlayer::threaded_playback()
 {
     // Lambda function to get the current time in microseconds
-    const auto get_now = []() -> long long {
-        return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    const auto get_now = []() -> long long
+    {
+        return Time::get_singleton()->get_ticks_usec();
     };
 
     // print
@@ -254,6 +259,8 @@ void MidiPlayer::threaded_playback()
 /// @brief Loop the midi player or stop it if looping is disabled
 void MidiPlayer::loop_or_stop_thread_safe()
 {
+    call_thread_safe("emit_signal", "finished");
+
     if (this->loop == false)
     {
         this->call_thread_safe("stop");
