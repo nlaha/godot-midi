@@ -1,0 +1,14 @@
+[remap]
+
+importer="com.nlaha.godotmidi"
+type="MidiResource"
+uid="uid://bdfpqmn8msmwb"
+path="res://.godot/imported/metal-man-s-stage.mid-e5f595d97c65730384233d0990a5c568.res"
+
+[deps]
+
+source_file="res://metal-man-s-stage.mid"
+dest_files=["res://.godot/imported/metal-man-s-stage.mid-e5f595d97c65730384233d0990a5c568.res"]
+
+[params]
+

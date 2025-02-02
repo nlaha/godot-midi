@@ -3,13 +3,18 @@ extends EditorPlugin
 
 const MainView = preload("./views/main_view.tscn")
 
-var import_plugin
+var midi_import_plugin
+var sf2_import_plugin
+
 var main_view
 var export_plugin : AndroidExportPlugin
 
 func _enter_tree():
-	import_plugin = preload("midi_import_plugin.gd").new()
-	add_import_plugin(import_plugin)
+	midi_import_plugin = preload("midi_import_plugin.gd").new()
+	add_import_plugin(midi_import_plugin)
+
+	sf2_import_plugin = preload("sf2_import_plugin.gd").new()
+	add_import_plugin(sf2_import_plugin)
 
 	if Engine.is_editor_hint():
 		main_view = MainView.instantiate()
@@ -23,8 +28,11 @@ func _enter_tree():
 
 
 func _exit_tree():
-	remove_import_plugin(import_plugin)
-	import_plugin = null
+	remove_import_plugin(midi_import_plugin)
+	midi_import_plugin = null
+	
+	remove_import_plugin(sf2_import_plugin)
+	sf2_import_plugin = null
 
 	if is_instance_valid(main_view):
 		main_view.queue_free()

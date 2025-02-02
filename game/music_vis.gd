@@ -6,17 +6,24 @@ var notes = []
 var notes_on = {}
 
 var midi_player: MidiPlayer
-var asp: AudioStreamPlayer
+var aspm: AudioStreamPlayerMidi
+#var asp: AudioStreamPlayer
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	midi_player = $MidiPlayer
-	asp = $AudioStreamPlayer
+
+	# link to the AudioStreamPlayerMidi node
+	# to synthesize midi events
+	aspm = $AudioStreamPlayerMidi
+
+	midi_player.note.connect(on_note)
 
 	# linking an ASP allows for async playback of audio with midi events
-	# for better syncing
-	midi_player.note.connect(on_note)
-	midi_player.link_audio_stream_player([asp])
+	# for better syncing when using pre-rendered audio
+	# asp = $AudioStreamPlayer
+	#midi_player.link_audio_stream_player([asp])
+
 	midi_player.play()
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -43,9 +50,11 @@ func _process(delta):
 # Called when a "note" type event is played
 func on_note(event, track):
 	if (event['subtype'] == MIDI_MESSAGE_NOTE_ON): # note on
+		aspm.note_on(event['note'], event['data'] / 127.0, 4)
 		notes_on[event['note']] = track
 		print(event)
 		#$SFX.play()
 	elif (event['subtype'] == MIDI_MESSAGE_NOTE_OFF): # note off
+		aspm.note_off(event['note'], 0)
 		notes_on.erase(event['note'])
 	#print("[Track: " + str(track) + "] Note on: " + str(event['note']))

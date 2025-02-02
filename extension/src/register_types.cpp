@@ -3,6 +3,7 @@
 #include "midi_parser.h"
 #include "midi_resource.h"
 #include "midi_player.h"
+#include "audio_stream_player_midi.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/class_db.hpp>
@@ -21,6 +22,10 @@ void initialize_godotmidi_types(ModuleInitializationLevel p_level)
 	ClassDB::register_class<MidiParser>();
 	ClassDB::register_class<MidiResource>();
 	ClassDB::register_class<MidiPlayer>();
+
+	ClassDB::register_class<Sf2Resource>();
+
+	ClassDB::register_class<AudioStreamPlayerMidi>();
 }
 
 void uninitialize_godotmidi_types(ModuleInitializationLevel p_level)

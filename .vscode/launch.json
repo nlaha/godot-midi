@@ -8,7 +8,7 @@
       "name": "Debug GodotMidi (gdb)",
       "type": "cppdbg",
       "request": "launch",
-      "program": "C:\\EquinoxEngine\\Godot_v4.2.2-stable_win64_console.exe",
+      "program": "C:\\EquinoxEngine\\godot-4.3-editor-debug-windows-msvc2022\\bin\\windows\\godot.windows.editor.x86_64.exe",
       "args": ["-e", "--path ${workspaceFolder}/game/project.godot"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}/game",

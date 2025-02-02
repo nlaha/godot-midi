@@ -1,0 +1,14 @@
+[remap]
+
+importer="com.nlaha.godotmidi_sf2"
+type="Sf2Resource"
+uid="uid://cde1263laxhw8"
+path="res://.godot/imported/Phoenix_MT-32.sf2-141d7dc2bcc097f7f21e610d4225941b.res"
+
+[deps]
+
+source_file="res://Phoenix_MT-32.sf2"
+dest_files=["res://.godot/imported/Phoenix_MT-32.sf2-141d7dc2bcc097f7f21e610d4225941b.res"]
+
+[params]
+
