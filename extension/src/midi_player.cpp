@@ -232,6 +232,7 @@ void MidiPlayer::threaded_playback()
         {
             double time = longest_asp->get_playback_position() + AudioServer::get_singleton()->get_time_since_last_mix();
             time -= audio_output_latency;
+            time -= audio_stream_delay;
             delta = time - current_time;
         }
 
