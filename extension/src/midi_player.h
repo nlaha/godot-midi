@@ -123,6 +123,8 @@ private:
 
     void loop_or_stop_thread_safe();
 
+    double audio_stream_delay = 0.5;
+
 public:
     void process_delta(double delta);
 
@@ -182,6 +184,14 @@ public:
         this->loop = loop;
     };
 
+    void set_audio_stream_delay(double delay)
+    {
+        audio_stream_delay = delay;
+    }
+
+    double get_audio_stream_delay() const {
+        return audio_stream_delay;
+    }
     /// @brief Sets the current time and updates the track index offsets
     /// @param current_time 
     void set_current_time(double current_time)
