@@ -4,9 +4,15 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "build-godot",
+      "type": "shell",
+      "command": ".vscode/build-godot.sh"
+    },
+    {
       "label": "godot-cpp-dir",
       "type": "shell",
       "command": "cd godot-cpp",
+      "dependsOn": "build-godot",
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -19,7 +25,7 @@
     {
       "label": "build-godot-cpp",
       "type": "shell",
-      "command": "scons target=template_debug debug_symbols=yes dev_build=yes",
+      "command": "scons target=template_debug dev_build=yes debug_symbols=yes",
       "dependsOrder": "sequence",
       "dependsOn": ["godot-cpp-dir"],
       "presentation": {
@@ -50,7 +56,7 @@
     {
       "label": "initial-build-extension",
       "type": "shell",
-      "command": "scons target=template_debug debug_symbols=yes dev_build=yes",
+      "command": "scons target=template_debug dev_build=yes debug_symbols=yes",
       "dependsOrder": "sequence",
       "dependsOn": ["godot-cpp-dir", "build-godot-cpp", "top-level-dir"],
       "presentation": {
@@ -66,7 +72,7 @@
     {
       "label": "build-extension",
       "type": "shell",
-      "command": "scons target=template_debug debug_symbols=yes dev_build=yes",
+      "command": "scons target=template_debug",
       "presentation": {
         "echo": true,
         "revealProblems": "onProblem",

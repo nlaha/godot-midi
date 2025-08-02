@@ -5,11 +5,37 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug GodotMidi (gdb)",
+      "name": "Debug Editor (gdb)",
       "type": "cppdbg",
       "request": "launch",
-      "program": "C:\\EquinoxEngine\\godot-4.3-editor-debug-windows-msvc2022\\bin\\windows\\godot.windows.editor.x86_64.exe",
+      "program": "${workspaceFolder}/godot/bin/godot.windows.editor.dev.x86_64.exe",
       "args": ["-e", "--path ${workspaceFolder}/game/project.godot"],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}/game",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "miDebuggerPath": "C:\\Users\\nlaha\\scoop\\shims\\gdb.exe",
+      "preLaunchTask": "build-godot-cpp",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        },
+        {
+          "description": "Set Disassembly Flavor to Intel",
+          "text": "-gdb-set disassembly-flavor intel",
+          "ignoreFailures": true
+        }
+      ]
+    },
+    {
+      "name": "Debug Game (gdb)",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/godot/bin/godot.windows.editor.dev.x86_64.exe",
+      "args": ["--path ${workspaceFolder}/game/project.godot"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}/game",
       "environment": [],

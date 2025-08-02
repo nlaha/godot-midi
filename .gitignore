@@ -4,6 +4,7 @@ game/addons/godot_midi/bin/*
 .sconsign*.dblite
 /bin
 .gradle/
+godot/
 
 .idea/
 
