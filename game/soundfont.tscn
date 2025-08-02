@@ -1,0 +1,29 @@
+[gd_scene load_steps=3 format=3 uid="uid://b4okuqpcgo6mp"]
+
+[ext_resource type="MidiResource" uid="uid://ce7614xju6orx" path="res://mii_channel.mid" id="1_blhuw"]
+
+[sub_resource type="GDScript" id="GDScript_uabtp"]
+resource_name = "Debug"
+script/source = "extends MidiPlayer
+
+
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+	print(\"Ready\")
+	self.note.connect(_on_note)
+	self.play()
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta: float) -> void:
+	pass
+
+func _on_note(event, track) -> void:
+	print(\"[Track: \" + str(track) + \"] Note played: \" + str(event['note']))
+"
+
+[node name="Node3D" type="Node3D"]
+
+[node name="MidiPlayer" type="MidiPlayer" parent="."]
+midi = ExtResource("1_blhuw")
+auto_stop = false
+script = SubResource("GDScript_uabtp")

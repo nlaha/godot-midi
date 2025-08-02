@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://bvaqq3i1ucrqb"]
 
-[ext_resource type="Script" path="res://addons/godot_midi/views/track.gd" id="1_qhdoj"]
-[ext_resource type="Shader" path="res://addons/godot_midi/views/checkerboard.gdshader" id="2_m3vsd"]
+[ext_resource type="Script" uid="uid://b5oebuo838mfo" path="res://addons/godot_midi/views/track.gd" id="1_qhdoj"]
+[ext_resource type="Shader" uid="uid://c76h4wpktfggk" path="res://addons/godot_midi/views/checkerboard.gdshader" id="2_m3vsd"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5gki5"]
 bg_color = Color(0.0588235, 0.0588235, 0.0588235, 1)

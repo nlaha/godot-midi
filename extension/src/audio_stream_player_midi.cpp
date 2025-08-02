@@ -3,6 +3,8 @@
 
 #include "audio_stream_player_midi.h"
 
+std::mutex tsf_mutex;
+
 AudioStreamPlayerMidi::AudioStreamPlayerMidi()
 {
     this->sample_rate = 44100;
@@ -44,6 +46,8 @@ void AudioStreamPlayerMidi::_ready()
         return;
     }
 
+    tsf_mutex.lock();
+
     // print size of file buffer
     UtilityFunctions::print("[GodotMidi] File Buffer Size: " + itos(this->soundfont->get_file_buffer().size()));
 
@@ -57,11 +61,16 @@ void AudioStreamPlayerMidi::_ready()
     // set up soundfont
     tsf_set_output(this->sf2_handle, TSF_STEREO_INTERLEAVED, this->sample_rate, 0);
 
+    // Initialize preset on special 10th MIDI channel to use percussion sound bank (128) if available
+    tsf_channel_set_bank_preset(this->sf2_handle, 9, 128, 0);
+
     // log the size of the sf2_handle
     UtilityFunctions::print("[GodotMidi] Num SF2 Presets: " + itos(this->sf2_handle->presetNum));
 
     // log the soundfont
     UtilityFunctions::print("[GodotMidi] Soundfont: " + this->soundfont->get_path());
+
+    tsf_mutex.unlock();
 }
 
 /// @brief Process the audio stream player
@@ -87,11 +96,13 @@ void AudioStreamPlayerMidi::_process(float delta)
     }
 
     PackedFloat32Array buffer = PackedFloat32Array();
-    buffer.resize(frames_available * 2); 
+    buffer.resize(frames_available * 2);
 
+    tsf_mutex.lock();
     tsf_render_float(this->sf2_handle, buffer.ptrw(), frames_available, 0);
+    tsf_mutex.unlock();
 
-    // iterate through the buffer and push the frames to the playback 
+    // iterate through the buffer and push the frames to the playback
     // even indices are the left channel, odd indices are the right channel
     for (int i = 0; i < buffer.size(); i += 2)
     {
@@ -104,29 +115,76 @@ void AudioStreamPlayerMidi::_process(float delta)
 /// @brief Called for every note event in the linked midi player
 /// @param note the note number
 /// @param velocity the velocity of the note
-/// @param preset the preset number
-
-/// @param preset the preset number
-void AudioStreamPlayerMidi::note_on(int note, float velocity, int preset)
+/// @param channel the channel number
+void AudioStreamPlayerMidi::note_on(int note, float velocity, int channel)
 {
     if (this->sf2_handle == nullptr)
     {
-
         return;
     }
 
-    tsf_note_on(this->sf2_handle, preset, note, velocity);
+    tsf_mutex.lock();
+    tsf_channel_note_on(this->sf2_handle, channel, note, velocity);
+    tsf_mutex.unlock();
 }
 
 /// @brief Called for every note off event in the linked midi player
-/// @param note
-/// @param preset
-void AudioStreamPlayerMidi::note_off(int note, int preset)
+/// @param note the note number
+/// @param channel the channel number
+void AudioStreamPlayerMidi::note_off(int note, int channel)
 {
     if (this->sf2_handle == nullptr)
     {
         return;
     }
 
-    tsf_note_off(this->sf2_handle, preset, note);
+    tsf_mutex.lock();
+    tsf_channel_note_off(this->sf2_handle, channel, note);
+    tsf_mutex.unlock();
+}
+
+/// @brief Called for every program change event in the linked midi player
+/// @param channel the channel number
+/// @param preset the preset number
+void AudioStreamPlayerMidi::program_change(int channel, int preset)
+{
+    if (this->sf2_handle == nullptr)
+    {
+        return;
+    }
+
+    tsf_mutex.lock();
+    tsf_channel_set_presetnumber(this->sf2_handle, channel, preset, (channel == 9) ? 1 : 0);
+    tsf_mutex.unlock();
+}
+
+/// @brief Called for every pitch bend event in the linked midi player
+/// @param channel the channel number
+/// @param bend the pitch bend value
+void AudioStreamPlayerMidi::pitch_bend(int channel, int bend)
+{
+    if (this->sf2_handle == nullptr)
+    {
+        return;
+    }
+
+    tsf_mutex.lock();
+    tsf_channel_set_pitchwheel(this->sf2_handle, channel, bend);
+    tsf_mutex.unlock();
+}
+
+/// @brief Called for every control change event in the linked midi player
+/// @param channel the channel number
+/// @param control the control number
+/// @param value the value of the control
+void AudioStreamPlayerMidi::control_change(int channel, int control, int value)
+{
+    if (this->sf2_handle == nullptr)
+    {
+        return;
+    }
+
+    tsf_mutex.lock();
+    tsf_channel_midi_control(this->sf2_handle, channel, control, value);
+    tsf_mutex.unlock();
 }

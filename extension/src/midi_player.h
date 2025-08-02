@@ -23,6 +23,7 @@
 
 #include "midi_resource.h"
 #include "midi_parser.h"
+#include "audio_stream_player_midi.h"
 
 using namespace godot;
 
@@ -102,19 +103,24 @@ private:
 
     /// @brief Track previous time for delta calculation
     Array prev_track_times;
-    
+
     /// @brief The linked AudioStreamPlayer (optional)
-    std::vector<AudioStreamPlayer*> asps;
-    AudioStreamPlayer* longest_asp;
+    std::vector<AudioStreamPlayer *> asps;
+
+    /// @brief The linked AudioStreamPlayerMidi (optional)
+    AudioStreamPlayerMidi *asp_midi;
+
+    /// @brief The longest audio stream player
+    AudioStreamPlayer *longest_asp;
 
     /// @brief The playback thread for playing back the midi on a separate thread
     std::thread playback_thread;
-    
+
     /// @brief The audio output latency from the audio server
     double audio_output_latency;
 
     /// @brief Whether the audio stream player is linked
-    bool has_asp ;
+    bool has_asp;
 
     /// @brief Whether to automatically stop the audio stream player when the midi player stops
     bool auto_stop = true;
@@ -142,7 +148,8 @@ public:
 
     void link_audio_stream_player(Array asps);
 
-    bool get_auto_stop()
+    bool
+    get_auto_stop()
     {
         return this->auto_stop;
     };
@@ -183,7 +190,7 @@ public:
     };
 
     /// @brief Sets the current time and updates the track index offsets
-    /// @param current_time 
+    /// @param current_time
     void set_current_time(double current_time)
     {
         this->current_time = current_time;

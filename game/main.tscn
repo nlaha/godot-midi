@@ -1,11 +1,10 @@
-[gd_scene load_steps=20 format=3 uid="uid://cf5sqk6dd4esg"]
+[gd_scene load_steps=18 format=3 uid="uid://cf5sqk6dd4esg"]
 
-[ext_resource type="Script" path="res://music_vis.gd" id="1_7bol8"]
-[ext_resource type="Shader" path="res://note_vis_shader.gdshader" id="2_uwn88"]
-[ext_resource type="MidiResource" uid="uid://bdfpqmn8msmwb" path="res://metal-man-s-stage.mid" id="3_ruuey"]
+[ext_resource type="Script" uid="uid://cqv65f6mybs6h" path="res://music_vis.gd" id="1_7bol8"]
+[ext_resource type="Shader" uid="uid://3i6gili8sext" path="res://note_vis_shader.gdshader" id="2_uwn88"]
+[ext_resource type="MidiResource" uid="uid://ce7614xju6orx" path="res://mii_channel.mid" id="3_laj02"]
 [ext_resource type="AudioStream" uid="uid://bib56neltjbos" path="res://zeal.ogg" id="4_wy2g0"]
 [ext_resource type="AudioStream" uid="uid://btbw2a07sdp51" path="res://melee.wav" id="5_gkc6h"]
-[ext_resource type="Sf2Resource" uid="uid://cde1263laxhw8" path="res://Phoenix_MT-32.sf2" id="6_2a0ia"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_2soq2"]
 render_priority = 0
@@ -74,14 +73,12 @@ func _process(delta):
 			print(\"Setting pasued to \" + str(node.get_tree().paused))
 "
 
-[sub_resource type="AudioStreamGenerator" id="AudioStreamGenerator_8fpm2"]
-
 [node name="Main" type="Node"]
 script = ExtResource("1_7bol8")
 note_materials = Array[Material]([SubResource("ShaderMaterial_2soq2"), SubResource("ShaderMaterial_33vtw"), SubResource("ShaderMaterial_jh5ke"), SubResource("ShaderMaterial_4arlw"), SubResource("ShaderMaterial_wg5fx"), SubResource("ShaderMaterial_gw6ig"), SubResource("ShaderMaterial_utwia"), SubResource("ShaderMaterial_grq4g")])
 
 [node name="MidiPlayer" type="MidiPlayer" parent="."]
-midi = ExtResource("3_ruuey")
+midi = ExtResource("3_laj02")
 process_mode = 3
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
@@ -108,8 +105,3 @@ stream = ExtResource("5_gkc6h")
 process_mode = 3
 script = SubResource("GDScript_keiq7")
 node = NodePath("..")
-
-[node name="AudioStreamPlayerMidi" type="AudioStreamPlayerMidi" parent="."]
-soundfont = ExtResource("6_2a0ia")
-stream = SubResource("AudioStreamGenerator_8fpm2")
-volume_db = -14.466

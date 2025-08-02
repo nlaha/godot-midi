@@ -11,6 +11,7 @@
 #include <godot_cpp/classes/audio_stream_player.hpp>
 #include <godot_cpp/classes/audio_stream_generator_playback.hpp>
 #include <memory>
+#include <mutex>
 #include "utility.h"
 #include "sf2_resource.h"
 
@@ -24,8 +25,16 @@ class AudioStreamPlayerMidi : public AudioStreamPlayer
 protected:
     static void _bind_methods()
     {
-        ClassDB::bind_method(D_METHOD("note_on", "note", "velocity", "preset"), &AudioStreamPlayerMidi::note_on);
-        ClassDB::bind_method(D_METHOD("note_off", "note", "preset"), &AudioStreamPlayerMidi::note_off);
+        // note on
+        ClassDB::bind_method(D_METHOD("note_on", "note", "velocity", "channel"), &AudioStreamPlayerMidi::note_on);
+        // note off
+        ClassDB::bind_method(D_METHOD("note_off", "note", "channel"), &AudioStreamPlayerMidi::note_off);
+        // program change
+        ClassDB::bind_method(D_METHOD("program_change", "channel", "preset"), &AudioStreamPlayerMidi::program_change);
+        // pitch bend
+        ClassDB::bind_method(D_METHOD("pitch_bend", "channel", "bend"), &AudioStreamPlayerMidi::pitch_bend);
+        // control change
+        ClassDB::bind_method(D_METHOD("control_change", "channel", "control", "value"), &AudioStreamPlayerMidi::control_change);
 
         ClassDB::bind_method(D_METHOD("get_sample_rate"), &AudioStreamPlayerMidi::get_sample_rate);
         ClassDB::bind_method(D_METHOD("set_sample_rate", "sample_rate"), &AudioStreamPlayerMidi::set_sample_rate);
@@ -58,8 +67,11 @@ public:
     void _ready() override;
     void _process(float delta);
 
-    void note_on(int note, float velocity, int preset);
-    void note_off(int note, int preset);
+    void note_on(int note, float velocity, int channel);
+    void note_off(int note, int channel);
+    void program_change(int channel, int preset);
+    void pitch_bend(int channel, int bend);
+    void control_change(int channel, int control, int value);
 
     int get_sample_rate() const { return this->sample_rate; }
     void set_sample_rate(int sample_rate) { this->sample_rate = sample_rate; }

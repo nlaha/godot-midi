@@ -13,16 +13,14 @@ var aspm: AudioStreamPlayerMidi
 func _ready():
 	midi_player = $MidiPlayer
 
-	# link to the AudioStreamPlayerMidi node
-	# to synthesize midi events
-	aspm = $AudioStreamPlayerMidi
-
 	midi_player.note.connect(on_note)
 
 	# linking an ASP allows for async playback of audio with midi events
 	# for better syncing when using pre-rendered audio
+	# alternatively, link an audio stream player midi for synthesized audio
 	# asp = $AudioStreamPlayer
-	#midi_player.link_audio_stream_player([asp])
+	aspm = $AudioStreamPlayerMidi
+	midi_player.link_audio_stream_player([aspm])
 
 	midi_player.play()
 
@@ -50,11 +48,9 @@ func _process(delta):
 # Called when a "note" type event is played
 func on_note(event, track):
 	if (event['subtype'] == MIDI_MESSAGE_NOTE_ON): # note on
-		aspm.note_on(event['note'], event['data'] / 127.0, 4)
 		notes_on[event['note']] = track
 		print(event)
 		#$SFX.play()
 	elif (event['subtype'] == MIDI_MESSAGE_NOTE_OFF): # note off
-		aspm.note_off(event['note'], 0)
 		notes_on.erase(event['note'])
 	#print("[Track: " + str(track) + "] Note on: " + str(event['note']))

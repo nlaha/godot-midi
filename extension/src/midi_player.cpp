@@ -19,6 +19,7 @@ MidiPlayer::MidiPlayer()
     this->has_asp = false;
 
     this->longest_asp = nullptr;
+    this->asp_midi = nullptr;
     this->asps = std::vector<AudioStreamPlayer *>();
 
     // disable process in the editor
@@ -156,23 +157,38 @@ void MidiPlayer::resume()
 void MidiPlayer::link_audio_stream_player(Array asps)
 {
     // extract audio stream players from the array
-    this->asps.resize(asps.size());
     double longest_time = 0;
     for (int i = 0; i < asps.size(); i++)
     {
-        AudioStreamPlayer *asp = Object::cast_to<AudioStreamPlayer>(asps[i]);
-        if (asp != nullptr)
-        {
-            // get the longest audio stream player
-            double time = asp->get_stream()->get_length();
-            if (time > longest_time)
-            {
-                longest_time = time;
-                this->longest_asp = asp;
-            }
+        Variant item = asps[i];
 
-            this->asps[i] = asp;
-            this->has_asp = true;
+        // determine if we're dealing with an ASP or a ASP Midi
+        if (item.has_method("note_on"))
+        {
+            // AudioStreamPlayerMidi *asp = Object::cast_to<AudioStreamPlayerMidi>(item);
+            // if (asp != nullptr)
+            // {
+            //     this->asp_midi = asp;
+            // }
+
+            UtilityFunctions::print("[GodotMidi] Linked AudioStreamPlayerMidi");
+        }
+        else
+        {
+            AudioStreamPlayer *asp = Object::cast_to<AudioStreamPlayer>(item);
+            if (asp != nullptr)
+            {
+                // get the longest audio stream player
+                double time = asp->get_stream()->get_length();
+                if (time > longest_time)
+                {
+                    longest_time = time;
+                    this->longest_asp = asp;
+                }
+
+                this->asps.push_back(asp);
+                this->has_asp = true;
+            }
         }
     }
 
@@ -324,23 +340,17 @@ void MidiPlayer::process_delta(double delta)
                 // start at next available event (index offset + 1, since index offset is the last event we processed)
                 this->track_index_offsets[i] = j + 1;
                 String event_type = event.get("type", "undef");
+                int event_subtype = event.get("subtype", 0);
+                int event_channel = event.get("channel", 0);
 
                 if (event_type == "meta")
                 {
-                    // print note index offset, time, j and absolute time, track, subtype and delta
-                    // UtilityFunctions::print("Note index offset: " + String::num_int64(index_off) + " j: " + String::num_int64(j) + " Time: " + String::num(this->current_time) + " Absolute time: " + String::num(event_absolute_time) + " Track: " + String::num_int64(i) + " Subtype: " + String::num(event.get("subtype", 0)) + " Delta: " + String::num(event_delta_seconds));
-
                     // ingest meta events such as tempo changes
                     // we need to do this now as opposed to when the midi file is loaded
                     // to allow for tempo changes during playback
-                    int meta_type = event.get("subtype", 0);
-
-                    if (meta_type == MidiParser::MidiEventMeta::MidiMetaEventType::SetTempo)
+                    if (event_subtype == MidiParser::MidiEventMeta::MidiMetaEventType::SetTempo)
                     {
                         this->midi->set_tempo(static_cast<int>(event.get("data", DEFAULT_MIDI_TEMPO)));
-
-                        // print tempo
-                        // UtilityFunctions::print("[GodotMidi] Tempo: " + String::num(this->midi->get_tempo()));
                     }
 
                     // TODO: support time signature changes
@@ -351,12 +361,47 @@ void MidiPlayer::process_delta(double delta)
                 }
                 else if (event_type == "note")
                 {
+                    if (this->asp_midi != nullptr)
+                    {
+                        // // send events over to the audio stream player midi
+                        // switch (event_subtype)
+                        // {
+                        // case MidiParser::MidiEventNote::NoteType::NoteOn:
+                        //     // note on event
+                        //     this->asp_midi->note_on(event.get("note", 0), event.get("data", 0), event_channel);
+                        //     break;
+                        // case MidiParser::MidiEventNote::NoteType::NoteOff:
+                        //     // note off event
+                        //     this->asp_midi->note_off(event.get("note", 0), event_channel);
+                        //     break;
+                        // case MidiParser::MidiEventNote::NoteType::ProgramChange:
+                        //     // program change event
+                        //     this->asp_midi->program_change(event_channel, event.get("data", 0));
+                        //     break;
+                        // case MidiParser::MidiEventNote::NoteType::PitchBend:
+                        // {
+                        //     // pitch bend event
+                        //     // it's a 14-bit value, the first byte is the LSB and the second byte is the MSB
+                        //     // the first byte is in "note" and the second byte is in "data"
+                        //     int pitch_bend = (static_cast<int>(event.get("note", 0)) << 7) | static_cast<int>(event.get("data", 0));
+                        //     this->asp_midi->pitch_bend(event_channel, pitch_bend);
+                        //     break;
+                        // }
+                        // case MidiParser::MidiEventNote::NoteType::Controller:
+                        //     // controller event
+                        //     this->asp_midi->control_change(event_channel, event.get("note", 0), event.get("data", 0));
+                        //     break;
+                        // default:
+                        //     break;
+                        // }
+                    }
+
+                    // emit signal for note events
                     call_thread_safe("emit_signal", "note", event, i);
-                    // print note index offset, time, j, absolute time, track, subtype and delta
-                    // UtilityFunctions::print("Note index offset: " + String::num_int64(index_off) + " j: " + String::num_int64(j) + " Time: " + String::num(this->current_time) + " Absolute time: " + String::num(event_absolute_time) + " Track: " + String::num_int64(i) + " Subtype: " + String::num(event.get("subtype", 0)) + " Delta: " + String::num(event_delta_seconds));
                 }
                 else if (event_type == "system")
                 {
+                    // emit signal for system events
                     call_thread_safe("emit_signal", "system", event, i);
                 }
                 else
@@ -369,8 +414,6 @@ void MidiPlayer::process_delta(double delta)
             }
             else
             {
-                // print
-                // UtilityFunctions::print("[GodotMidi] No more events on this track at this time");
                 // we've gone too far, break and move to the next track
                 break;
             }

@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 import os
 
+
 def normalize_path(val, env):
     return val if os.path.isabs(val) else os.path.join(env.Dir("#").abspath, val)
+
 
 def validate_parent_dir(key, val, env):
     if not os.path.isdir(normalize_path(os.path.dirname(val), env)):
         raise UserError("'%s' is not a directory: %s" % (key, os.path.dirname(val)))
+
 
 libname = "godotmidi"
 projectdir = "game"
@@ -57,14 +60,17 @@ if env["platform"] == "macos":
     file = "{}.framework/{}".format(env["platform"], platlibname, platlibname)
 
 libraryfile = "bin/{}/{}".format(env["platform"], file)
-print("CCFLAGS: ", env['CCFLAGS'])
+print("CCFLAGS: ", env["CCFLAGS"])
 
 library = env.SharedLibrary(
     libraryfile,
     source=sources,
 )
 
-copy = env.InstallAs("{}/addons/godot_midi/bin/{}/lib{}".format(projectdir, env["platform"], file), library)
+copy = env.InstallAs(
+    "{}/addons/godot_midi/bin/{}/lib{}".format(projectdir, env["platform"], file),
+    library,
+)
 
 default_args = [library, copy]
 if localEnv.get("compiledb", False):
