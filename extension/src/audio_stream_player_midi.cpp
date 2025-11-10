@@ -35,10 +35,12 @@ void AudioStreamPlayerMidi::_ready()
 
     if (this->has_stream_playback())
     {
+        Object::cast_to<AudioStreamGenerator>(this->stream.ptr())->set_mix_rate(this->sample_rate);
+
         this->playback = (Ref<AudioStreamGeneratorPlayback>)this->get_stream_playback();
 
         // log the sample rate
-        UtilityFunctions::print("[GodotMidi] Sample Rate: " + itos(this->sample_rate));
+        UtilityFunctions::print("[GodotMidi ASPM] Sample Rate: " + itos(this->sample_rate));
     }
 
     if (this->soundfont == nullptr)
@@ -49,12 +51,12 @@ void AudioStreamPlayerMidi::_ready()
     tsf_mutex.lock();
 
     // print size of file buffer
-    UtilityFunctions::print("[GodotMidi] File Buffer Size: " + itos(this->soundfont->get_file_buffer().size()));
+    UtilityFunctions::print("[GodotMidi ASPM] File Buffer Size: " + itos(this->soundfont->get_file_buffer().size()));
 
     this->sf2_handle = tsf_load_memory(this->soundfont->get_file_buffer().ptr(), this->soundfont->get_file_buffer().size());
     if (this->sf2_handle == nullptr)
     {
-        UtilityFunctions::print("[GodotMidi] Failed to parse soundfont");
+        UtilityFunctions::print("[GodotMidi ASPM] Failed to parse soundfont");
         return;
     }
 
@@ -65,12 +67,14 @@ void AudioStreamPlayerMidi::_ready()
     tsf_channel_set_bank_preset(this->sf2_handle, 9, 128, 0);
 
     // log the size of the sf2_handle
-    UtilityFunctions::print("[GodotMidi] Num SF2 Presets: " + itos(this->sf2_handle->presetNum));
+    UtilityFunctions::print("[GodotMidi ASPM] Num SF2 Presets: " + itos(this->sf2_handle->presetNum));
 
     // log the soundfont
-    UtilityFunctions::print("[GodotMidi] Soundfont: " + this->soundfont->get_path());
+    UtilityFunctions::print("[GodotMidi ASPM] Soundfont: " + this->soundfont->get_path());
 
     tsf_mutex.unlock();
+
+    this->play();
 }
 
 /// @brief Process the audio stream player
@@ -83,6 +87,14 @@ void AudioStreamPlayerMidi::_process(float delta)
         return;
     }
 
+    fill_buffer();
+}
+
+/// @brief Fill the audio buffer with samples from the soundfont
+/// This function is called every frame to fill the audio buffer with samples from the soundfont
+/// It uses the tsf library to render the audio samples and push them to the playback buffer
+void AudioStreamPlayerMidi::fill_buffer()
+{
     if (this->sf2_handle == nullptr || this->playback == nullptr || this->is_playing() == false)
     {
         return;
@@ -93,6 +105,11 @@ void AudioStreamPlayerMidi::_process(float delta)
     if (frames_available == 0)
     {
         return;
+    }
+    else
+    {
+        // log the number of frames available
+        UtilityFunctions::print("[GodotMidi ASPM] Frames Available: " + itos(frames_available));
     }
 
     PackedFloat32Array buffer = PackedFloat32Array();
@@ -108,6 +125,7 @@ void AudioStreamPlayerMidi::_process(float delta)
     {
         float left = buffer[i];
         float right = buffer[i + 1];
+        UtilityFunctions::print("[GodotMidi ASPM] Pushing Frame: " + itos(i / 2) + " Left: " + rtos(left) + " Right: " + rtos(right));
         this->playback->push_frame(Vector2(left, right));
     }
 }
@@ -152,6 +170,9 @@ void AudioStreamPlayerMidi::program_change(int channel, int preset)
     {
         return;
     }
+
+    // log the program change
+    UtilityFunctions::print("[GodotMidi ASPM] Program Change: Channel " + itos(channel) + ", Preset " + itos(preset));
 
     tsf_mutex.lock();
     tsf_channel_set_presetnumber(this->sf2_handle, channel, preset, (channel == 9) ? 1 : 0);

@@ -19,7 +19,7 @@ fi
 
 echo "Cloning Godot Engine repository..."
 git clone https://github.com/godotengine/godot.git
-git checkout "4.4"
+git checkout 4.4
 echo "Building Godot Engine..."
 cd godot
 scons platform=$PLATFORM dev_build=yes debug_symbols=yes tools=yes

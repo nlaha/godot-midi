@@ -35,7 +35,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/godot/bin/godot.windows.editor.dev.x86_64.exe",
-      "args": ["--path ${workspaceFolder}/game/project.godot"],
+      "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}/game",
       "environment": [],

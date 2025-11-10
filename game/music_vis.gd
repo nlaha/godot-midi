@@ -20,8 +20,6 @@ func _ready():
 	# alternatively, link an audio stream player midi for synthesized audio
 	# asp = $AudioStreamPlayer
 	aspm = $AudioStreamPlayerMidi
-	midi_player.link_audio_stream_player([aspm])
-
 	midi_player.play()
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -49,8 +47,10 @@ func _process(delta):
 func on_note(event, track):
 	if (event['subtype'] == MIDI_MESSAGE_NOTE_ON): # note on
 		notes_on[event['note']] = track
-		print(event)
+		aspm.note_on(event['note'], event['data'], event['channel'])
+		#print(event)
 		#$SFX.play()
 	elif (event['subtype'] == MIDI_MESSAGE_NOTE_OFF): # note off
 		notes_on.erase(event['note'])
+		aspm.note_off(event['note'], event['channel'])
 	#print("[Track: " + str(track) + "] Note on: " + str(event['note']))

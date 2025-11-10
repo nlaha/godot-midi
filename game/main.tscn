@@ -1,8 +1,9 @@
-[gd_scene load_steps=16 format=3 uid="uid://cf5sqk6dd4esg"]
+[gd_scene load_steps=18 format=3 uid="uid://cf5sqk6dd4esg"]
 
-[ext_resource type="Script" uid="uid://t5mwn05k5vu2" path="res://music_vis.gd" id="1_7bol8"]
+[ext_resource type="Script" uid="uid://cqv65f6mybs6h" path="res://music_vis.gd" id="1_7bol8"]
 [ext_resource type="Shader" uid="uid://3i6gili8sext" path="res://note_vis_shader.gdshader" id="2_uwn88"]
-[ext_resource type="MidiResource" uid="uid://bwk6t11415q6n" path="res://zeal.mid" id="3_1bvp3"]
+[ext_resource type="MidiResource" uid="uid://dfklwmt3legvs" path="res://zeal.mid" id="3_1bvp3"]
+[ext_resource type="Sf2Resource" uid="uid://cde1263laxhw8" path="res://Phoenix_MT-32.sf2" id="4_7mycd"]
 [ext_resource type="AudioStream" uid="uid://bib56neltjbos" path="res://zeal.ogg" id="4_lquwl"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_2soq2"]
@@ -45,6 +46,8 @@ render_priority = 0
 shader = ExtResource("2_uwn88")
 shader_parameter/color = Color(0.639216, 0.619608, 0.611765, 1)
 
+[sub_resource type="AudioStreamGenerator" id="AudioStreamGenerator_1bvp3"]
+
 [sub_resource type="PhysicalSkyMaterial" id="PhysicalSkyMaterial_qbs84"]
 
 [sub_resource type="Sky" id="Sky_t5vpa"]
@@ -63,14 +66,14 @@ script = ExtResource("1_7bol8")
 note_materials = Array[Material]([SubResource("ShaderMaterial_2soq2"), SubResource("ShaderMaterial_33vtw"), SubResource("ShaderMaterial_jh5ke"), SubResource("ShaderMaterial_4arlw"), SubResource("ShaderMaterial_wg5fx"), SubResource("ShaderMaterial_gw6ig"), SubResource("ShaderMaterial_utwia"), SubResource("ShaderMaterial_grq4g")])
 
 [node name="MidiPlayer" type="MidiPlayer" parent="."]
-<<<<<<< Updated upstream
-midi = ExtResource("3_laj02")
-=======
 midi = ExtResource("3_1bvp3")
 loop = true
 auto_stop = false
->>>>>>> Stashed changes
 process_mode = 3
+
+[node name="AudioStreamPlayerMidi" type="AudioStreamPlayerMidi" parent="."]
+soundfont = ExtResource("4_7mycd")
+stream = SubResource("AudioStreamGenerator_1bvp3")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(-0.392767, 0.353553, -0.848961, 0.480471, 0.866026, 0.138372, 0.784144, -0.353553, -0.510018, -2, 2, 2)
@@ -86,11 +89,7 @@ size = Vector3(18, 0.1, 1)
 environment = SubResource("Environment_6map0")
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
-<<<<<<< Updated upstream
-stream = ExtResource("4_wy2g0")
-=======
 stream = ExtResource("4_lquwl")
->>>>>>> Stashed changes
 volume_db = -10.0
 
 [node name="SFX" type="AudioStreamPlayer" parent="."]

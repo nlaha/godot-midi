@@ -67,6 +67,8 @@ public:
     void _ready() override;
     void _process(float delta);
 
+    void fill_buffer();
+
     void note_on(int note, float velocity, int channel);
     void note_off(int note, int channel);
     void program_change(int channel, int preset);
