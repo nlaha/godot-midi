@@ -85,6 +85,12 @@ void MidiPlayer::stop()
 /// @brief Internal function for stopping the midi playback
 void MidiPlayer::stop_internal(bool stop_asp = true)
 {
+    if (this->midi == nullptr)
+    {
+        UtilityFunctions::printerr("[GodotMidi] No midi resource set");
+        return;
+    }
+
     // reset time to zero
     this->current_time = 0;
     this->prev_track_times.clear();
@@ -163,8 +169,15 @@ void MidiPlayer::link_audio_stream_player(Array asps)
         AudioStreamPlayer *asp = Object::cast_to<AudioStreamPlayer>(asps[i]);
         if (asp != nullptr)
         {
+            Ref<AudioStream> asp_stream = asp->get_stream();
+            if (asp_stream.is_null() || asp_stream->get_length() == 0 || asp_stream.is_valid() == false)
+            {
+                UtilityFunctions::printerr("[GodotMidi] Invalid AudioStream in link_audio_stream_player at index " + String::num_int64(i));
+                continue;
+            }
+
             // get the longest audio stream player
-            double time = asp->get_stream()->get_length();
+            double time = asp_stream->get_length();
             if (time > longest_time)
             {
                 longest_time = time;
@@ -174,6 +187,13 @@ void MidiPlayer::link_audio_stream_player(Array asps)
             this->asps[i] = asp;
             this->has_asp = true;
         }
+    }
+
+    if (longest_asp == nullptr)
+    {
+        UtilityFunctions::printerr("[GodotMidi] No valid AudioStreamPlayers linked in link_audio_stream_player");
+        this->has_asp = false;
+        return;
     }
 
     longest_asp->connect("finished", Callable(this, "loop_or_stop_thread_safe"));
