@@ -105,3 +105,8 @@ The good news: it's easy to use! Just call `link_audio_stream_player(...)` with 
 ```
 
 Open the demo project for an included music visualizer script!
+
+## Importing MIDI files at runtime
+
+A similar approach to how the plugin imports MIDI files in the editor can also be used to import them at runtime. Create a `MidiResource` manually, and call the `load_midi` method with a path to the source MIDI file.
+https://github.com/nlaha/godot-midi/blob/a7d40af0083c8e314b6de619126f87f199d6b661/game/addons/godot_midi/midi_import_plugin.gd#L52-L55

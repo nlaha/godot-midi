@@ -1,9 +1,9 @@
 [gd_scene load_steps=18 format=3 uid="uid://cf5sqk6dd4esg"]
 
-[ext_resource type="Script" path="res://music_vis.gd" id="1_7bol8"]
-[ext_resource type="Shader" path="res://note_vis_shader.gdshader" id="2_uwn88"]
-[ext_resource type="MidiResource" uid="uid://cxfl6ncwyra6n" path="res://forest/forest_song_control.mid" id="3_0u8j2"]
-[ext_resource type="AudioStream" uid="uid://bkr5ul4g0swji" path="res://forest/Forest_Melody.ogg" id="4_yise5"]
+[ext_resource type="Script" uid="uid://by07748s86eil" path="res://music_vis.gd" id="1_7bol8"]
+[ext_resource type="Shader" uid="uid://3i6gili8sext" path="res://note_vis_shader.gdshader" id="2_uwn88"]
+[ext_resource type="MidiResource" uid="uid://cdoihonl60es5" path="res://test_low_tempo.mid" id="3_1bvp3"]
+[ext_resource type="AudioStream" uid="uid://bss4i5wmt23sb" path="res://test_low_tempo.ogg" id="4_lquwl"]
 [ext_resource type="AudioStream" uid="uid://btbw2a07sdp51" path="res://melee.wav" id="5_gkc6h"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_2soq2"]
@@ -78,7 +78,7 @@ script = ExtResource("1_7bol8")
 note_materials = Array[Material]([SubResource("ShaderMaterial_2soq2"), SubResource("ShaderMaterial_33vtw"), SubResource("ShaderMaterial_jh5ke"), SubResource("ShaderMaterial_4arlw"), SubResource("ShaderMaterial_wg5fx"), SubResource("ShaderMaterial_gw6ig"), SubResource("ShaderMaterial_utwia"), SubResource("ShaderMaterial_grq4g")])
 
 [node name="MidiPlayer" type="MidiPlayer" parent="."]
-midi = ExtResource("3_0u8j2")
+midi = ExtResource("3_1bvp3")
 loop = true
 auto_stop = false
 process_mode = 3
@@ -97,7 +97,7 @@ size = Vector3(18, 0.1, 1)
 environment = SubResource("Environment_6map0")
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("4_yise5")
+stream = ExtResource("4_lquwl")
 volume_db = -10.0
 autoplay = true
 
