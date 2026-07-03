@@ -1,6 +1,24 @@
 name: Builds
 
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+    inputs:
+      build_windows:
+        description: "Build Windows"
+        type: boolean
+        default: true
+      build_macos:
+        description: "Build macOS"
+        type: boolean
+        default: true
+      build_linux:
+        description: "Build Linux"
+        type: boolean
+        default: true
+      build_android:
+        description: "Build Android"
+        type: boolean
+        default: true
 
 concurrency:
   group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-macos
@@ -10,6 +28,11 @@ jobs:
   build:
     runs-on: ${{matrix.os}}
     name: ${{matrix.name}}
+    if: >
+      (matrix.platform != 'windows' || inputs.build_windows) &&
+      (matrix.platform != 'macos' || inputs.build_macos) &&
+      (matrix.platform != 'linux' || inputs.build_linux) &&
+      (matrix.platform != 'android' || inputs.build_android)
     strategy:
       fail-fast: false
       matrix:
