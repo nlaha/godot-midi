@@ -342,7 +342,7 @@ void MidiPlayer::process_delta(double delta)
             event_delta_seconds /= speed_scale;
             double event_absolute_time = event_delta_seconds + static_cast<double>(this->prev_track_times[i]);
 
-            if (this->current_time >= event_absolute_time)
+            if (this->current_time + this->note_offset >= event_absolute_time)
             {
                 // start at next available event (index offset + 1, since index offset is the last event we processed)
                 this->track_index_offsets[i] = j + 1;
