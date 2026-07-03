@@ -74,6 +74,16 @@ protected:
         ClassDB::bind_method(D_METHOD("loop_internal"), &MidiPlayer::loop_internal);
         ClassDB::bind_method(D_METHOD("loop_or_stop_thread_safe"), &MidiPlayer::loop_or_stop_thread_safe);
 
+        ClassDB::bind_method(D_METHOD("get_note_offset"), &MidiPlayer::get_note_offset);
+        ClassDB::bind_method(D_METHOD("set_note_offset", "note_offset"), &MidiPlayer::set_note_offset);
+        ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "note_offset"), "set_note_offset", "get_note_offset");
+
+        ClassDB::bind_method(D_METHOD("get_notes_in_range", "start_time", "end_time"), &MidiPlayer::get_notes_in_range);
+        ClassDB::bind_method(D_METHOD("get_notes_around", "time", "window_before", "window_after"), &MidiPlayer::get_notes_around);
+
+        // exposed only so Array::sort_custom() can call it back by name; not intended for external use
+        ClassDB::bind_method(D_METHOD("_compare_tick_events", "a", "b"), &MidiPlayer::_compare_tick_events);
+
         ADD_SIGNAL(MethodInfo("finished"));
 
         ADD_SIGNAL(MethodInfo("note"));
@@ -119,9 +129,70 @@ private:
     /// @brief Whether to automatically stop the audio stream player when the midi player stops
     bool auto_stop = true;
 
+    /// @brief Fixed timestamp offset (seconds) applied to note timings returned
+    /// by get_notes_in_range()/get_notes_around(), useful for latency
+    /// calibration in rhythm games; positive values shift notes later,
+    /// negative values shift them earlier
+    double note_offset;
+
+    /// @brief Precomputed, tempo-aware cache of note on/off events with their
+    /// absolute time in seconds (unadjusted by note_offset), sorted ascending
+    /// by time. Rebuilt whenever a new MidiResource is assigned via set_midi()
+    Array note_cache;
+
     void threaded_playback();
 
     void loop_or_stop_thread_safe();
+
+    void build_note_cache();
+
+    /// @brief Comparator used internally by build_note_cache() via Array::sort_custom();
+    /// not intended to be called directly
+    bool _compare_tick_events(Dictionary a, Dictionary b) const
+    {
+        double a_tick = a.get("tick", 0.0);
+        double b_tick = b.get("tick", 0.0);
+
+        if (a_tick != b_tick)
+        {
+            return a_tick < b_tick;
+        }
+
+        // tempo-change events are ordered before other events at the exact
+        // same tick so they take effect in time for anything simultaneous
+        bool a_tempo = a.get("is_tempo", false);
+        bool b_tempo = b.get("is_tempo", false);
+        return a_tempo && !b_tempo;
+    };
+
+    /// @brief Computes the duration of a single tick in microseconds, taking
+    /// into account whether the midi file uses tempo-relative
+    /// (ticks-per-quarter-note) or SMPTE-based (fixed frame rate) timing
+    /// @param tempo_override if >= 0, use this tempo (microseconds per quarter
+    /// note) instead of the midi resource's live tempo; used when precomputing
+    /// the note cache so it doesn't race with the live playback tempo
+    double get_microseconds_per_tick(int32_t tempo_override = -1)
+    {
+        if (this->midi->get_division_type() == MidiParser::MidiHeaderChunk::MidiDivisionType::FramesPerSecond)
+        {
+            double ticks_per_second = static_cast<double>(this->midi->get_smpte_fps()) * static_cast<double>(this->midi->get_smpte_ticks_per_frame());
+            if (ticks_per_second <= 0.0)
+            {
+                return 0.0;
+            }
+            // SMPTE-based timing is fixed by the frame rate, tempo events don't apply
+            return 1000000.0 / ticks_per_second;
+        }
+
+        double division = static_cast<double>(this->midi->get_division());
+        if (division == 0.0)
+        {
+            return 0.0;
+        }
+
+        int32_t tempo_value = tempo_override >= 0 ? tempo_override : this->midi->get_tempo();
+        return static_cast<double>(tempo_value) / division;
+    };
 
 public:
     void process_delta(double delta);
@@ -182,6 +253,29 @@ public:
         this->loop = loop;
     };
 
+    double get_note_offset()
+    {
+        return this->note_offset;
+    };
+
+    void set_note_offset(double note_offset)
+    {
+        this->note_offset = note_offset;
+    };
+
+    /// @brief Returns all cached note on/off events whose (offset-adjusted)
+    /// absolute time falls within [start_time, end_time], in seconds. Useful
+    /// for rhythm games that need to query which notes are near a given
+    /// point in the song, e.g. the current playback time
+    Array get_notes_in_range(double start_time, double end_time);
+
+    /// @brief Convenience wrapper around get_notes_in_range() for querying a
+    /// window around a specific timestamp, e.g. the current playback time
+    /// @param time the center timestamp, in seconds
+    /// @param window_before how far before `time` to include, in seconds
+    /// @param window_after how far after `time` to include, in seconds
+    Array get_notes_around(double time, double window_before, double window_after);
+
     /// @brief Sets the current time and updates the track index offsets
     /// @param current_time 
     void set_current_time(double current_time)
@@ -200,8 +294,8 @@ public:
                 Dictionary event = events[j];
                 double event_delta = event.get("delta", 0);
 
-                // apply tempo
-                double microseconds_per_tick = static_cast<double>(this->midi->get_tempo()) / static_cast<double>(this->midi->get_division());
+                // apply tempo (or fixed SMPTE rate)
+                double microseconds_per_tick = this->get_microseconds_per_tick();
                 // delta time is stored as ticks, convert to microseconds
                 event_delta = event_delta * microseconds_per_tick;
 
@@ -233,6 +327,12 @@ public:
             // initialize track_index_offsets
             this->track_index_offsets.clear();
             this->track_index_offsets.resize(this->midi->get_track_count());
+
+            this->build_note_cache();
+        }
+        else
+        {
+            this->note_cache.clear();
         }
     };
 

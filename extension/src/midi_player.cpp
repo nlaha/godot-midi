@@ -13,6 +13,9 @@ MidiPlayer::MidiPlayer()
     this->loop = false;
     this->state = PlayerState::Stopped;
 
+    this->note_offset = 0;
+    this->note_cache = Array();
+
     this->audio_output_latency = AudioServer::get_singleton()->get_output_latency();
 
     this->playback_thread = std::thread();
@@ -329,8 +332,8 @@ void MidiPlayer::process_delta(double delta)
             Dictionary event = events[j];
             double event_delta = event.get("delta", 0);
 
-            // apply tempo
-            double microseconds_per_tick = static_cast<double>(this->midi->get_tempo()) / static_cast<double>(this->midi->get_division());
+            // apply tempo (or fixed SMPTE rate)
+            double microseconds_per_tick = this->get_microseconds_per_tick();
             // delta time is stored as ticks, convert to microseconds
             event_delta = event_delta * microseconds_per_tick;
 
@@ -339,7 +342,7 @@ void MidiPlayer::process_delta(double delta)
             event_delta_seconds /= speed_scale;
             double event_absolute_time = event_delta_seconds + static_cast<double>(this->prev_track_times[i]);
 
-            if (this->current_time >= event_absolute_time)
+            if (this->current_time + this->note_offset >= event_absolute_time)
             {
                 // start at next available event (index offset + 1, since index offset is the last event we processed)
                 this->track_index_offsets[i] = j + 1;
@@ -405,4 +408,171 @@ void MidiPlayer::process_delta(double delta)
     // increment time, current time will hold the
     // number of seconds since starting
     this->current_time += delta;
+}
+
+/// @brief Rebuilds the note timing cache used by get_notes_in_range()/get_notes_around().
+/// Merges every track's events into a single tick-ordered timeline (since
+/// tempo changes apply globally, not per-track) and walks it once to compute
+/// each note on/off event's absolute time in seconds. Safe to call from the
+/// main thread whenever the midi resource changes; does not touch any state
+/// used by the playback thread
+void MidiPlayer::build_note_cache()
+{
+    this->note_cache.clear();
+
+    if (this->midi == nullptr)
+    {
+        return;
+    }
+
+    // merge every track's events into a single array tagged with their
+    // absolute tick position, so they can be sorted into one global timeline
+    Array all_events;
+
+    int64_t track_count = this->midi->get_track_count();
+    for (int64_t t = 0; t < track_count; t++)
+    {
+        Array events = this->midi->get_tracks()[t].get("events");
+        double tick_accum = 0.0;
+
+        for (int64_t i = 0; i < events.size(); i++)
+        {
+            Dictionary event = events[i];
+            double delta = event.get("delta", 0);
+            tick_accum += delta;
+
+            String type = event.get("type", "");
+            int subtype = event.get("subtype", -1);
+            bool is_tempo = type == "meta" && subtype == (int)MidiParser::MidiEventMeta::MidiMetaEventType::SetTempo;
+
+            Dictionary timed_event = event.duplicate();
+            timed_event["tick"] = tick_accum;
+            timed_event["is_tempo"] = is_tempo;
+            all_events.push_back(timed_event);
+        }
+    }
+
+    // sort by absolute tick position; tempo-change events are ordered before
+    // other events at the exact same tick so they take effect in time for
+    // anything happening simultaneously (see _compare_tick_events)
+    all_events.sort_custom(Callable(this, "_compare_tick_events"));
+
+    double time_seconds = 0.0;
+    double last_tick = 0.0;
+    int32_t current_tempo = DEFAULT_MIDI_TEMPO;
+
+    for (int64_t i = 0; i < all_events.size(); i++)
+    {
+        Dictionary event = all_events[i];
+        double tick = event.get("tick", 0.0);
+        bool is_tempo = event.get("is_tempo", false);
+
+        double delta_ticks = tick - last_tick;
+        double microseconds_per_tick = this->get_microseconds_per_tick(current_tempo);
+        time_seconds += (delta_ticks * microseconds_per_tick) / 1000000.0;
+        last_tick = tick;
+
+        if (is_tempo)
+        {
+            current_tempo = (int32_t)event.get("data", DEFAULT_MIDI_TEMPO);
+        }
+
+        String type = event.get("type", "");
+        if (type != "note")
+        {
+            continue;
+        }
+
+        int subtype = event.get("subtype", -1);
+        if (subtype != (int)MidiParser::MidiEventNote::NoteType::NoteOn &&
+            subtype != (int)MidiParser::MidiEventNote::NoteType::NoteOff)
+        {
+            // only note on/off events are cached; controller, pitch bend,
+            // aftertouch, etc. aren't "notes" for rhythm-game purposes
+            continue;
+        }
+
+        Dictionary note_event = event.duplicate();
+        note_event.erase("tick");
+        note_event.erase("is_tempo");
+
+        // per MIDI convention, a NoteOn with velocity 0 is really a NoteOff;
+        // "active" tells the caller whether this is an actual note trigger
+        int velocity = note_event.get("data", 0);
+        bool active = subtype == (int)MidiParser::MidiEventNote::NoteType::NoteOn && velocity > 0;
+        note_event["active"] = active;
+        note_event["time"] = time_seconds;
+
+        this->note_cache.push_back(note_event);
+    }
+}
+
+/// @brief Returns all cached note events whose absolute time (shifted by
+/// note_offset) falls within [start_time, end_time]
+/// @param start_time start of the query window, in seconds
+/// @param end_time end of the query window, in seconds
+Array MidiPlayer::get_notes_in_range(double start_time, double end_time)
+{
+    Array result;
+
+    if (start_time > end_time)
+    {
+        double tmp = start_time;
+        start_time = end_time;
+        end_time = tmp;
+    }
+
+    // shift the query window by -note_offset instead of adjusting every
+    // cached entry, since note_cache is stored in raw (unshifted) time
+    double query_start = start_time - this->note_offset;
+    double query_end = end_time - this->note_offset;
+
+    int64_t count = this->note_cache.size();
+
+    // binary search for the first entry whose time is >= query_start;
+    // note_cache is kept sorted ascending by time by build_note_cache()
+    int64_t low = 0;
+    int64_t high = count;
+    while (low < high)
+    {
+        int64_t mid = low + (high - low) / 2;
+        Dictionary entry = this->note_cache[mid];
+        double entry_time = entry.get("time", 0.0);
+        if (entry_time < query_start)
+        {
+            low = mid + 1;
+        }
+        else
+        {
+            high = mid;
+        }
+    }
+
+    for (int64_t i = low; i < count; i++)
+    {
+        Dictionary note_event = this->note_cache[i];
+        double time = note_event.get("time", 0.0);
+
+        if (time > query_end)
+        {
+            // sorted ascending, nothing further can match
+            break;
+        }
+
+        Dictionary result_event = note_event.duplicate();
+        result_event["time"] = time + this->note_offset;
+        result.push_back(result_event);
+    }
+
+    return result;
+}
+
+/// @brief Convenience wrapper for querying a window around a specific
+/// timestamp, e.g. the current playback time
+/// @param time the center timestamp, in seconds
+/// @param window_before how far before `time` to include, in seconds
+/// @param window_after how far after `time` to include, in seconds
+Array MidiPlayer::get_notes_around(double time, double window_before, double window_after)
+{
+    return this->get_notes_in_range(time - window_before, time + window_after);
 }

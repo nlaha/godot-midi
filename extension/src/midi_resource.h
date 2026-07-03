@@ -37,6 +37,18 @@ protected:
         ClassDB::bind_method(D_METHOD("get_division"), &MidiResource::get_division);
         ADD_PROPERTY(PropertyInfo(Variant::INT, "division"), "set_division", "get_division");
 
+        ClassDB::bind_method(D_METHOD("set_division_type", "division_type"), &MidiResource::set_division_type);
+        ClassDB::bind_method(D_METHOD("get_division_type"), &MidiResource::get_division_type);
+        ADD_PROPERTY(PropertyInfo(Variant::INT, "division_type"), "set_division_type", "get_division_type");
+
+        ClassDB::bind_method(D_METHOD("set_smpte_fps", "smpte_fps"), &MidiResource::set_smpte_fps);
+        ClassDB::bind_method(D_METHOD("get_smpte_fps"), &MidiResource::get_smpte_fps);
+        ADD_PROPERTY(PropertyInfo(Variant::INT, "smpte_fps"), "set_smpte_fps", "get_smpte_fps");
+
+        ClassDB::bind_method(D_METHOD("set_smpte_ticks_per_frame", "smpte_ticks_per_frame"), &MidiResource::set_smpte_ticks_per_frame);
+        ClassDB::bind_method(D_METHOD("get_smpte_ticks_per_frame"), &MidiResource::get_smpte_ticks_per_frame);
+        ADD_PROPERTY(PropertyInfo(Variant::INT, "smpte_ticks_per_frame"), "set_smpte_ticks_per_frame", "get_smpte_ticks_per_frame");
+
         ClassDB::bind_method(D_METHOD("set_tempo", "tempo"), &MidiResource::set_tempo);
         ClassDB::bind_method(D_METHOD("get_tempo"), &MidiResource::get_tempo);
         ADD_PROPERTY(PropertyInfo(Variant::INT, "tempo"), "set_tempo", "get_tempo");
@@ -54,6 +66,9 @@ private:
     int format;
     int track_count;
     int division;
+    int division_type;
+    int smpte_fps;
+    int smpte_ticks_per_frame;
     int tempo;
     Array tracks;
 
@@ -86,6 +101,30 @@ public:
     /// @brief Gets the division of the midi file in ticks per quarter note
     /// @return
     inline int get_division() const { return division; }
+
+    /// @brief Sets the division type, see MidiParser::MidiHeaderChunk::MidiDivisionType
+    /// @param p_division_type
+    inline void set_division_type(int p_division_type) { division_type = p_division_type; }
+
+    /// @brief Gets the division type, see MidiParser::MidiHeaderChunk::MidiDivisionType
+    /// @return
+    inline int get_division_type() const { return division_type; }
+
+    /// @brief Sets the SMPTE frame rate (only meaningful when division_type is FramesPerSecond)
+    /// @param p_smpte_fps
+    inline void set_smpte_fps(int p_smpte_fps) { smpte_fps = p_smpte_fps; }
+
+    /// @brief Gets the SMPTE frame rate (only meaningful when division_type is FramesPerSecond)
+    /// @return
+    inline int get_smpte_fps() const { return smpte_fps; }
+
+    /// @brief Sets the SMPTE ticks per frame (only meaningful when division_type is FramesPerSecond)
+    /// @param p_smpte_ticks_per_frame
+    inline void set_smpte_ticks_per_frame(int p_smpte_ticks_per_frame) { smpte_ticks_per_frame = p_smpte_ticks_per_frame; }
+
+    /// @brief Gets the SMPTE ticks per frame (only meaningful when division_type is FramesPerSecond)
+    /// @return
+    inline int get_smpte_ticks_per_frame() const { return smpte_ticks_per_frame; }
 
     /// @brief Sets the tempo in microseconds per quarter note
     /// @param p_tempo

@@ -1,57 +1,77 @@
 name: Builds
 
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+    inputs:
+      build_windows:
+        description: "Build Windows"
+        type: boolean
+        default: true
+      build_macos:
+        description: "Build macOS"
+        type: boolean
+        default: true
+      build_linux:
+        description: "Build Linux"
+        type: boolean
+        default: true
+      build_android:
+        description: "Build Android"
+        type: boolean
+        default: true
 
 concurrency:
   group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-macos
   cancel-in-progress: true
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Build matrix
+        id: set-matrix
+        shell: python
+        run: |
+          import json, os
+
+          matrix = {"include": []}
+
+          if "${{ inputs.build_windows }}" == "true":
+              matrix["include"].extend([
+                  {"identifier": "windows-debug", "os": "windows-latest", "name": "\U0001f3c1 Windows Debug", "target": "template_debug", "platform": "windows", "arch": "x86_64"},
+                  {"identifier": "windows-release", "os": "windows-latest", "name": "\U0001f3c1 Windows Release", "target": "template_release", "platform": "windows", "arch": "x86_64"},
+              ])
+
+          if "${{ inputs.build_macos }}" == "true":
+              matrix["include"].extend([
+                  {"identifier": "macos-debug", "os": "macos-latest", "name": "\U0001f34e macOS (universal) Debug", "target": "template_debug", "platform": "macos", "arch": "universal"},
+                  {"identifier": "macos-release", "os": "macos-latest", "name": "\U0001f34e macOS (universal) Release", "target": "template_release", "platform": "macos", "arch": "universal"},
+              ])
+
+          if "${{ inputs.build_linux }}" == "true":
+              matrix["include"].extend([
+                  {"identifier": "linux-debug", "os": "ubuntu-22.04", "name": "\U0001f427 Linux Debug", "runner": "self-hosted", "target": "template_debug", "platform": "linux", "arch": "x86_64"},
+                  {"identifier": "linux-release", "os": "ubuntu-22.04", "name": "\U0001f427 Linux Release", "runner": "self-hosted", "target": "template_release", "platform": "linux", "arch": "x86_64"},
+              ])
+
+          if "${{ inputs.build_android }}" == "true":
+              matrix["include"].extend([
+                  {"identifier": "android-debug", "os": "ubuntu-22.04", "name": "\U0001f916 Android Debug", "target": "template_debug", "platform": "android", "arch": "arm64"},
+                  {"identifier": "android-release", "os": "ubuntu-22.04", "name": "\U0001f916 Android Release", "target": "template_release", "platform": "android", "arch": "arm64"},
+              ])
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"matrix={json.dumps(matrix)}\n")
+
   build:
+    needs: setup
     runs-on: ${{matrix.os}}
     name: ${{matrix.name}}
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - identifier: windows-debug
-            os: windows-latest
-            name: 🏁 Windows Debug
-            target: template_debug
-            platform: windows
-            arch: x86_64
-          - identifier: windows-release
-            os: windows-latest
-            name: 🏁 Windows Release
-            target: template_release
-            platform: windows
-            arch: x86_64
-          - identifier: macos-debug
-            os: macos-latest
-            name: 🍎 macOS (universal) Debug
-            target: template_debug
-            platform: macos
-            arch: universal
-          - identifier: macos-release
-            os: macos-latest
-            name: 🍎 macOS (universal) Release
-            target: template_release
-            platform: macos
-            arch: universal
-          - identifier: linux-debug
-            os: ubuntu-22.04
-            name: 🐧 Linux Debug
-            runner: self-hosted
-            target: template_debug
-            platform: linux
-            arch: x86_64
-          - identifier: linux-release
-            os: ubuntu-22.04
-            name: 🐧 Linux Release
-            runner: self-hosted
-            target: template_release
-            platform: linux
-            arch: x86_64
+      matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
 
     steps:
       - name: Checkout project
@@ -80,6 +100,10 @@ jobs:
       - name: Setup MinGW for Windows/MinGW build
         if: ${{ matrix.platform == 'windows' }}
         uses: msys2/setup-msys2@v2
+
+      - name: Set up Android NDK
+        if: ${{ matrix.platform == 'android' }}
+        run: echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;23.2.8568313"
 
       - name: Compile godot-cpp
         shell: sh
