@@ -103,15 +103,7 @@ jobs:
 
       - name: Set up Android NDK
         if: ${{ matrix.platform == 'android' }}
-        uses: nttld/setup-ndk@v1
-        id: setup-ndk
-        with:
-          ndk-version: r23c
-          add-to-path: false
-
-      - name: Set ANDROID_NDK_ROOT
-        if: ${{ matrix.platform == 'android' }}
-        run: echo "ANDROID_NDK_ROOT=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
+        run: echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;23.2.8568313"
 
       - name: Compile godot-cpp
         shell: sh
