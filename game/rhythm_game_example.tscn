@@ -1,19 +1,19 @@
 [gd_scene format=3 uid="uid://c3xn8q7dt5mka"]
 
 [ext_resource type="Script" uid="uid://bjk4qar2msntq" path="res://rhythm_game_example.gd" id="1_taiko"]
-[ext_resource type="MidiResource" uid="uid://cjy0ow4dt2fk4" path="res://invent1.mid" id="2_midi"]
-[ext_resource type="AudioStream" uid="uid://ln2lvchqtgly" path="res://invent1.wav" id="3_audio"]
+[ext_resource type="MidiResource" uid="uid://mbidjexocb38" path="res://rhythm_game_track.mid" id="2_l24v2"]
+[ext_resource type="AudioStream" uid="uid://dauy484grjxep" path="res://rhythm_game_track.wav" id="3_ep50i"]
 
 [node name="RhythmGameExample" type="Node2D" unique_id=2006071931]
 script = ExtResource("1_taiko")
 
 [node name="MidiPlayer" type="MidiPlayer" parent="." unique_id=1694021972]
-midi = ExtResource("2_midi")
+midi = ExtResource("2_l24v2")
 loop = true
 auto_stop = false
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=1179955237]
-stream = ExtResource("3_audio")
+stream = ExtResource("3_ep50i")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=79066056]
 

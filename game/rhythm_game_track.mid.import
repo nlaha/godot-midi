@@ -1,0 +1,14 @@
+[remap]
+
+importer="com.nlaha.godotmidi"
+type="MidiResource"
+uid="uid://mbidjexocb38"
+path="res://.godot/imported/rhythm_game_track.mid-57c2be43610a3e299d3bc202c2294ba1.res"
+
+[deps]
+
+source_file="res://rhythm_game_track.mid"
+dest_files=["res://.godot/imported/rhythm_game_track.mid-57c2be43610a3e299d3bc202c2294ba1.res"]
+
+[params]
+

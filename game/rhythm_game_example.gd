@@ -5,7 +5,7 @@ extends Node2D
 @export var track_speed := 450.0 ## pixels per second
 @export var note_radius := 28.0
 @export var hit_x := 180.0 ## x position of the hit zone
-@export var hit_window := 0.15 ## seconds for a valid hit
+@export var hit_window := 0.2 ## seconds for a valid hit
 
 var midi_player: MidiPlayer
 var asp: AudioStreamPlayer
@@ -13,6 +13,10 @@ var asp: AudioStreamPlayer
 var score := 0
 var feedback := ""
 var feedback_tmr := 0.0
+
+var countdown_timer := 3.0
+var game_started := false
+var current_display_time := 0.0
 
 # keys we've already scored so we don't double-count
 var hit_keys := {}
@@ -36,7 +40,6 @@ func _ready() -> void:
 	midi_player = $MidiPlayer
 	asp = $AudioStreamPlayer
 	midi_player.link_audio_stream_player([asp])
-	midi_player.play()
 
 
 func _process(delta: float) -> void:
@@ -51,7 +54,18 @@ func _process(delta: float) -> void:
 		if shockwaves[i].age >= shockwaves[i].lifetime:
 			shockwaves.remove_at(i)
 
-	var t := midi_player.current_time
+	if not game_started:
+		countdown_timer -= delta
+		# display_time = -countdown_timer: at ct=look_ahead the first note
+		# enters the right edge; at ct=0 it reaches the hit zone as audio starts
+		current_display_time = -countdown_timer
+		if countdown_timer <= 0.0:
+			game_started = true
+			midi_player.play()
+	else:
+		current_display_time = midi_player.current_time
+
+	var t := current_display_time
 	visible_notes = []
 
 	for e in midi_player.get_notes_around(t, look_behind, look_ahead):
@@ -62,7 +76,7 @@ func _process(delta: float) -> void:
 		if hit_keys.has(key):
 			continue
 		# note has passed the hit window without being hit - mark missed
-		if float(e.get("time", 0.0)) < t - hit_window:
+		if game_started and float(e.get("time", 0.0)) < t - hit_window:
 			miss_keys[key] = true
 			continue
 		visible_notes.append(e)
@@ -75,7 +89,7 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	var vp := get_viewport_rect().size
 	var track_y := vp.y * 0.5
-	var t := midi_player.current_time if is_instance_valid(midi_player) else 0.0
+	var t := current_display_time
 
 	# track rail
 	draw_line(Vector2(0.0, track_y), Vector2(vp.x, track_y), Color(0.2, 0.2, 0.2), 6.0)
@@ -108,6 +122,15 @@ func _draw() -> void:
 		var border := Color(1.0, 0.6, 0.6) if is_don else Color(0.6, 0.8, 1.0)
 		draw_circle(Vector2(x, track_y), note_radius, fill)
 		draw_arc(Vector2(x, track_y), note_radius, 0.0, TAU, 48, border, 3.0)
+
+	# countdown overlay
+	if not game_started:
+		var font := ThemeDB.fallback_font
+		var font_size := 120
+		var txt := str(ceili(countdown_timer))
+		var txt_w := font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+		draw_string(font, Vector2((vp.x - txt_w) * 0.5, vp.y * 0.5 - 40.0), txt,
+				HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color(1.0, 1.0, 1.0, 0.9))
 
 
 func _spawn_hit_effect(pos: Vector2, is_hit: bool, is_don: bool) -> void:
@@ -167,6 +190,8 @@ func _spawn_hit_effect(pos: Vector2, is_hit: bool, is_don: bool) -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if not game_started:
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		var t := midi_player.current_time
 		if event.keycode == KEY_D:
@@ -194,12 +219,24 @@ func _try_hit(t: float, is_don: bool) -> void:
 		if not hit_keys.has(key) and not miss_keys.has(key):
 			hit_keys[key] = true
 			score += 1
-			feedback = "HIT!"
+			var signed_ms := roundi((float(best_note.get("time", 0.0)) - t) * 1000.0)
+			var ms_str := ("+" if signed_ms >= 0 else "") + str(signed_ms) + "ms"
+			if best_dt <= 0.02:
+				feedback = "Awesome! " + ms_str
+			elif best_dt <= 0.1:
+				feedback = "OK " + ms_str
+			else:
+				feedback = "Terrible! " + ms_str
 			feedback_tmr = 0.5
 			_spawn_hit_effect(effect_pos, true, is_don)
 			return
 
 	# miss - still show a press effect
 	_spawn_hit_effect(effect_pos, false, is_don)
-	feedback = "MISS"
+	if not best_note.is_empty():
+		var signed_ms := roundi((float(best_note.get("time", 0.0)) - t) * 1000.0)
+		var ms_str := ("+" if signed_ms >= 0 else "") + str(signed_ms) + "ms"
+		feedback = "Miss! " + ms_str
+	else:
+		feedback = "Miss!"
 	feedback_tmr = 0.5
