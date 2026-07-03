@@ -7,6 +7,8 @@
 
 This plugin aims to make rhythm game development and music syncing easier than ever before. Import a midi file like you would any other Godot asset, this can then be paired with a "MidiPlayer" node that sends out signals every time a midi event is fired. This project is a work in progress and lacks some features, so feel free to contribute any code or ideas on the pull requests page.
 
+https://github.com/user-attachments/assets/c635164a-0f0b-454d-8950-5390ff2f900d
+
 https://github.com/nlaha/godot-midi/assets/10292944/f88acfac-1ff3-49ee-8d25-9ee0ee585d09
 
 https://github.com/nlaha/godot-midi/assets/10292944/543646ec-ed45-406b-a3e5-f2b26caabfbe
@@ -23,7 +25,8 @@ https://github.com/nlaha/godot-midi/pull/35
 ## Installation from binaries
 
 1. Download the latest release from https://github.com/nlaha/godot-midi/releases
-> If you'd like to download a newer version that hasn't been released, download it from the latest Github Actions run: https://github.com/nlaha/godot-midi/actions/workflows/builds.yml
+
+   > If you'd like to download a newer version that hasn't been released, download it from the latest Github Actions run: https://github.com/nlaha/godot-midi/actions/workflows/builds.yml
 
 2. Copy the `godot-midi` folder to your project's `addons` folder
 3. Enable the addon in Godot's project settings
@@ -88,7 +91,7 @@ The good news: it's easy to use! Just call `link_audio_stream_player(...)` with 
 
       # link the AudioStreamPlayer in your scene
       # that contains the music associated with the midi
-      # NOTE: this must be an array, you can link multiple ASPs or one as 
+      # NOTE: this must be an array, you can link multiple ASPs or one as
       # shown below and they will all sync with playback of the MIDI
       midi_player.link_audio_stream_player([asp])
 
@@ -105,6 +108,50 @@ The good news: it's easy to use! Just call `link_audio_stream_player(...)` with 
 ```
 
 Open the demo project for an included music visualizer script!
+
+## Rhythm Game Helpers
+
+Godot Midi features several helper functions for rhythm games.
+
+An example of `get_notes_around` is shown below, it allows you to fetch an array of notes around an arbitrary time:
+
+```gdscript
+	for e in midi_player.get_notes_around(t, look_behind, look_ahead):
+		# only note-on events matter for gameplay
+		if not e.get("active", false):
+			continue
+		var key := _note_key(e)
+		if hit_keys.has(key):
+			continue
+		# note has passed the hit window without being hit - mark missed
+		if float(e.get("time", 0.0)) < t - hit_window:
+			miss_keys[key] = true
+			continue
+		visible_notes.append(e)
+```
+
+Similarly, `get_notes_in_range` gets the notes in an absolute range. All time units are in seconds.
+
+Function signatures from the C++ code are below:
+
+```c++
+   /// @brief Returns all cached note on/off events whose (offset-adjusted)
+   /// absolute time falls within [start_time, end_time], in seconds. Useful
+   /// for rhythm games that need to query which notes are near a given
+   /// point in the song, e.g. the current playback time
+   Array get_notes_in_range(double start_time, double end_time);
+
+   /// @brief Convenience wrapper around get_notes_in_range() for querying a
+   /// window around a specific timestamp, e.g. the current playback time
+   /// @param time the center timestamp, in seconds
+   /// @param window_before how far before `time` to include, in seconds
+   /// @param window_after how far after `time` to include, in seconds
+   Array get_notes_around(double time, double window_before, double window_after);
+```
+
+## Note Offset
+
+The note_offset parameter on the midi player allows you to offset note signals and the rhythm game helper functions without affecting the audio player synchronization. This is great for input latency calibration or other similar work.
 
 ## Importing MIDI files at runtime
 
