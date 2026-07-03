@@ -329,8 +329,8 @@ void MidiPlayer::process_delta(double delta)
             Dictionary event = events[j];
             double event_delta = event.get("delta", 0);
 
-            // apply tempo
-            double microseconds_per_tick = static_cast<double>(this->midi->get_tempo()) / static_cast<double>(this->midi->get_division());
+            // apply tempo (or fixed SMPTE rate)
+            double microseconds_per_tick = this->get_microseconds_per_tick();
             // delta time is stored as ticks, convert to microseconds
             event_delta = event_delta * microseconds_per_tick;
 

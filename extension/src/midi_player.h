@@ -123,6 +123,30 @@ private:
 
     void loop_or_stop_thread_safe();
 
+    /// @brief Computes the duration of a single tick in microseconds, taking
+    /// into account whether the midi file uses tempo-relative
+    /// (ticks-per-quarter-note) or SMPTE-based (fixed frame rate) timing
+    double get_microseconds_per_tick()
+    {
+        if (this->midi->get_division_type() == MidiParser::MidiHeaderChunk::MidiDivisionType::FramesPerSecond)
+        {
+            double ticks_per_second = static_cast<double>(this->midi->get_smpte_fps()) * static_cast<double>(this->midi->get_smpte_ticks_per_frame());
+            if (ticks_per_second <= 0.0)
+            {
+                return 0.0;
+            }
+            // SMPTE-based timing is fixed by the frame rate, tempo events don't apply
+            return 1000000.0 / ticks_per_second;
+        }
+
+        double division = static_cast<double>(this->midi->get_division());
+        if (division == 0.0)
+        {
+            return 0.0;
+        }
+        return static_cast<double>(this->midi->get_tempo()) / division;
+    };
+
 public:
     void process_delta(double delta);
 
@@ -200,8 +224,8 @@ public:
                 Dictionary event = events[j];
                 double event_delta = event.get("delta", 0);
 
-                // apply tempo
-                double microseconds_per_tick = static_cast<double>(this->midi->get_tempo()) / static_cast<double>(this->midi->get_division());
+                // apply tempo (or fixed SMPTE rate)
+                double microseconds_per_tick = this->get_microseconds_per_tick();
                 // delta time is stored as ticks, convert to microseconds
                 event_delta = event_delta * microseconds_per_tick;
 

@@ -72,6 +72,11 @@ public:
         int32_t num_tracks;
         MidiDivisionType division_type;
         int32_t division;
+        // only valid when division_type == FramesPerSecond
+        // frames_per_second is the positive frame rate (24, 25, 29 for 29.97 drop-frame, or 30)
+        // ticks_per_frame is the resolution within each frame
+        int32_t frames_per_second;
+        int32_t ticks_per_frame;
         int32_t tempo;
         bool end_of_track;
         bool only_notes;

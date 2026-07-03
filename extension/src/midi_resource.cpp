@@ -35,6 +35,9 @@ Error MidiResource::load_file(const String &p_path)
     this->format = header.file_format;
     this->track_count = header.num_tracks;
     this->division = header.division;
+    this->division_type = header.division_type;
+    this->smpte_fps = header.frames_per_second;
+    this->smpte_ticks_per_frame = header.ticks_per_frame;
     this->tempo = header.tempo;
 
     for (int trk_idx = 0; trk_idx < header.num_tracks; ++trk_idx)
