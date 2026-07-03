@@ -52,6 +52,18 @@ jobs:
             target: template_release
             platform: linux
             arch: x86_64
+          - identifier: android-debug
+            os: ubuntu-22.04
+            name: 🤖 Android Debug
+            target: template_debug
+            platform: android
+            arch: arm64
+          - identifier: android-release
+            os: ubuntu-22.04
+            name: 🤖 Android Release
+            target: template_release
+            platform: android
+            arch: arm64
 
     steps:
       - name: Checkout project
@@ -80,6 +92,18 @@ jobs:
       - name: Setup MinGW for Windows/MinGW build
         if: ${{ matrix.platform == 'windows' }}
         uses: msys2/setup-msys2@v2
+
+      - name: Set up Android NDK
+        if: ${{ matrix.platform == 'android' }}
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r23c
+          add-to-path: false
+
+      - name: Set ANDROID_NDK_ROOT
+        if: ${{ matrix.platform == 'android' }}
+        run: echo "ANDROID_NDK_ROOT=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
 
       - name: Compile godot-cpp
         shell: sh
