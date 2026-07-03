@@ -1,0 +1,52 @@
+[gd_scene format=3 uid="uid://c3xn8q7dt5mka"]
+
+[ext_resource type="Script" uid="uid://bjk4qar2msntq" path="res://rhythm_game_example.gd" id="1_taiko"]
+[ext_resource type="MidiResource" uid="uid://cjy0ow4dt2fk4" path="res://invent1.mid" id="2_midi"]
+[ext_resource type="AudioStream" uid="uid://ln2lvchqtgly" path="res://invent1.wav" id="3_audio"]
+
+[node name="RhythmGameExample" type="Node2D" unique_id=2006071931]
+script = ExtResource("1_taiko")
+
+[node name="MidiPlayer" type="MidiPlayer" parent="." unique_id=1694021972]
+midi = ExtResource("2_midi")
+loop = true
+auto_stop = false
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=1179955237]
+stream = ExtResource("3_audio")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=79066056]
+
+[node name="ScoreLabel" type="Label" parent="CanvasLayer" unique_id=561166590]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 320.0
+offset_bottom = 64.0
+theme_override_font_sizes/font_size = 26
+text = "Score: 0"
+
+[node name="FeedbackLabel" type="Label" parent="CanvasLayer" unique_id=1951663480]
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.4
+anchor_right = 0.5
+anchor_bottom = 0.4
+offset_left = -120.0
+offset_top = -30.0
+offset_right = 120.0
+offset_bottom = 30.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 42
+horizontal_alignment = 1
+
+[node name="InstructionsLabel" type="Label" parent="CanvasLayer" unique_id=1977931567]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -48.0
+offset_right = 720.0
+offset_bottom = -10.0
+theme_override_font_sizes/font_size = 18
+text = "D = Don (red notes)     F = Ka (blue notes)"
