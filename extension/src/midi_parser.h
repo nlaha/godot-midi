@@ -152,6 +152,12 @@ public:
     public:
         enum MidiSystemEventType
         {
+            SystemExclusiveStart = 0xF0,
+            MTCQuarterFrame = 0xF1,
+            SongPositionPointer = 0xF2,
+            SongSelect = 0xF3,
+            TuneRequest = 0xF6,
+            SystemExclusiveEscape = 0xF7,
             TimingClock = 0xF8,
             Start = 0xFA,
             Continue = 0xFB,

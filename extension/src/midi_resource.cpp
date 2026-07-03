@@ -39,9 +39,22 @@ Error MidiResource::load_file(const String &p_path)
 
     for (int trk_idx = 0; trk_idx < header.num_tracks; ++trk_idx)
     {
-        // read track chunk
+        // read track chunk, skipping over any unrecognized chunks that may
+        // appear between/before track chunks, as required by the MIDI spec
         MidiParser::RawMidiChunk trackChunk;
         midi_data = trackChunk.load_from_bytes(midi_data);
+
+        while (trackChunk.chunk_type == MidiParser::MidiChunkType::Unknown)
+        {
+            if (midi_data.size() == 0)
+            {
+                UtilityFunctions::print("[GodotMidi] Error: Ran out of data while skipping unknown chunks before track: " + String::num_int64(trk_idx));
+                return FAILED;
+            }
+
+            trackChunk = MidiParser::RawMidiChunk();
+            midi_data = trackChunk.load_from_bytes(midi_data);
+        }
 
         // parse track chunk
         MidiParser::MidiTrackChunk track;

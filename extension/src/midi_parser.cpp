@@ -175,7 +175,45 @@ MidiParser::MidiEventNote::MidiEventNote(int32_t channel, double delta, PackedBy
 MidiParser::MidiEventSystem::MidiEventSystem(double delta, PackedByteArray data) : MidiEvent(0, delta)
 {
     event_type = (MidiSystemEventType)data[0];
-    bytes_used = 1;
+
+    // number of data bytes following the status byte varies per the MIDI spec:
+    //  - system exclusive (0xF0) and the sysex escape/continuation (0xF7) are
+    //    followed by a variable length quantity giving the length of the
+    //    data that follows
+    //  - system common messages have a fixed number of data bytes
+    //  - system real-time messages (0xF8-0xFE) have no data bytes at all,
+    //    and can legally appear in the middle of another message without
+    //    disturbing it
+    switch (data[0])
+    {
+    case MidiSystemEventType::SystemExclusiveStart:
+    case MidiSystemEventType::SystemExclusiveEscape:
+    {
+        int32_t length_bytes = 0;
+        int64_t sysex_length = Utility::decode_varint_be(data, 1, length_bytes);
+        bytes_used = length_bytes + static_cast<int32_t>(sysex_length);
+        break;
+    }
+    case MidiSystemEventType::MTCQuarterFrame:
+    case MidiSystemEventType::SongSelect:
+        bytes_used = 1;
+        break;
+    case MidiSystemEventType::SongPositionPointer:
+        bytes_used = 2;
+        break;
+    case MidiSystemEventType::TuneRequest:
+    case MidiSystemEventType::TimingClock:
+    case MidiSystemEventType::Start:
+    case MidiSystemEventType::Continue:
+    case MidiSystemEventType::Stop:
+    case MidiSystemEventType::ActiveSensing:
+    default:
+        // real-time messages (and Reset/0xFF, which never reaches here since
+        // it's intercepted as a meta event when parsing SMF tracks) have no
+        // data bytes
+        bytes_used = 0;
+        break;
+    }
 }
 
 /// @brief Constructor for MIDI meta events
@@ -247,7 +285,7 @@ MidiParser::MidiEventMeta::MidiEventMeta(double delta, PackedByteArray data) : M
         // set time signature of the track
         Dictionary time_signature;
         time_signature["numerator"] = this->data[0];
-        time_signature["denominato"] = (int32_t)pow(2, this->data[1]);
+        time_signature["denominator"] = (int32_t)pow(2, this->data[1]);
         time_signature["clocks_per_tick"] = this->data[2];
         time_signature["num_32nd_notes_per_quarter"] = this->data[3];
         meta_data = time_signature;
@@ -277,6 +315,7 @@ MidiParser::MidiEventMeta::MidiEventMeta(double delta, PackedByteArray data) : M
 
         // set end of track flag
         this->meta_data = true;
+        break;
     }
     case MidiEventMeta::MidiMetaEventType::SequenceNumber:
     case MidiEventMeta::MidiMetaEventType::TextEvent:
@@ -311,6 +350,9 @@ bool MidiParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
     // we can only know when we reach the end of the chunk
     int32_t offset = 0;
     header.end_of_track = false;
+    // per the MIDI spec, consecutive channel voice/mode messages may omit
+    // a repeated status byte and reuse the previous one ("running status")
+    uint8_t running_status = 0;
     while (offset < raw.chunk_size)
     {
         if (header.end_of_track)
@@ -322,9 +364,50 @@ bool MidiParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
         int32_t delta_time = Utility::decode_varint_be(raw.chunk_data, offset, bytes_used);
         offset += bytes_used;
 
-        // next byte is the event type | channel
-        int32_t event_type = raw.chunk_data[offset];
-        offset += 1;
+        int32_t event_type;
+        PackedByteArray event_data;
+
+        uint8_t next_byte = raw.chunk_data[offset];
+        if (next_byte & 0x80)
+        {
+            // explicit status byte present
+            event_type = next_byte;
+            offset += 1;
+
+            if (event_type < 0xF0)
+            {
+                // channel voice/mode message, updates running status
+                running_status = static_cast<uint8_t>(event_type);
+            }
+            else if (event_type <= 0xF7)
+            {
+                // system common messages cancel running status
+                running_status = 0;
+            }
+            // system realtime messages (0xF8-0xFE) and meta events (0xFF)
+            // don't affect running status
+
+            event_data = raw.chunk_data.slice(offset - 1, raw.chunk_size);
+        }
+        else
+        {
+            // running status: this byte is actually the first data byte of
+            // a channel voice/mode message, reusing the last status byte
+            if (running_status == 0)
+            {
+                UtilityFunctions::printerr("[GodotMidi] Malformed MIDI track: data byte encountered with no active running status");
+                break;
+            }
+
+            event_type = running_status;
+
+            // rebuild an event buffer with the (implied) status byte
+            // prepended so downstream parsing doesn't need to care whether
+            // running status was used
+            event_data = PackedByteArray();
+            event_data.append(running_status);
+            event_data.append_array(raw.chunk_data.slice(offset, raw.chunk_size));
+        }
 
         // the event type is the first 4 bits of the byte
         // the channel is the last 4 bits
@@ -336,8 +419,6 @@ bool MidiParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
         {
             event_code = 0xFF;
         }
-
-        PackedByteArray event_data = raw.chunk_data.slice(offset - 1, raw.chunk_size);
 
         // the event code determines the type of the event
         std::unique_ptr<MidiEvent> ptr;
@@ -420,16 +501,14 @@ bool MidiParser::MidiTrackChunk::parse_chunk(RawMidiChunk raw, MidiHeaderChunk &
             MidiEventMeta meta_event = MidiEventMeta(delta_time, event_data);
             offset += meta_event.get_bytes_used();
             meta_events.push_back(meta_event);
+
+            if (meta_event.event_type == MidiEventMeta::MidiMetaEventType::EndOfTrack)
+            {
+                header.end_of_track = true;
+            }
+
             ptr = std::make_unique<MidiEventMeta>(meta_event);
             events.push_back(std::move(ptr));
-            break;
-        }
-        case 0xF0: // system exclusive
-        {
-            int bytes_used = 0;
-            int length = Utility::decode_varint_be(event_data, 0, bytes_used);
-            UtilityFunctions::print(String("System exclusive event, length: ") + String::num_int64(length));
-            offset += length + bytes_used;
             break;
         }
         default:
