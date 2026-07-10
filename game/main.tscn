@@ -2,9 +2,9 @@
 
 [ext_resource type="Script" uid="uid://by07748s86eil" path="res://music_vis.gd" id="1_7bol8"]
 [ext_resource type="Shader" uid="uid://3i6gili8sext" path="res://note_vis_shader.gdshader" id="2_uwn88"]
-[ext_resource type="MidiResource" uid="uid://cjy0ow4dt2fk4" path="res://invent1.mid" id="3_lquwl"]
-[ext_resource type="AudioStream" uid="uid://ln2lvchqtgly" path="res://invent1.wav" id="4_7mycd"]
+[ext_resource type="MidiResource" uid="uid://dusnqjs4f33f4" path="res://SQ4GM.MID" id="3_lquwl"]
 [ext_resource type="AudioStream" uid="uid://btbw2a07sdp51" path="res://melee.wav" id="5_gkc6h"]
+[ext_resource type="Sf2Resource" uid="uid://cde1263laxhw8" path="res://Phoenix_MT-32.sf2" id="6_7mycd"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_2soq2"]
 render_priority = 0
@@ -46,8 +46,6 @@ render_priority = 0
 shader = ExtResource("2_uwn88")
 shader_parameter/color = Color(0.639216, 0.619608, 0.611765, 1)
 
-[sub_resource type="AudioStreamGenerator" id="AudioStreamGenerator_1bvp3"]
-
 [sub_resource type="PhysicalSkyMaterial" id="PhysicalSkyMaterial_qbs84"]
 
 [sub_resource type="Sky" id="Sky_t5vpa"]
@@ -75,6 +73,9 @@ func _process(delta):
 			print(\"Setting pasued to \" + str(node.get_tree().paused))
 "
 
+[sub_resource type="AudioStreamGenerator" id="AudioStreamGenerator_272bh"]
+buffer_length = 0.03
+
 [node name="Main" type="Node" unique_id=329215823]
 script = ExtResource("1_7bol8")
 note_materials = Array[Material]([SubResource("ShaderMaterial_2soq2"), SubResource("ShaderMaterial_33vtw"), SubResource("ShaderMaterial_jh5ke"), SubResource("ShaderMaterial_4arlw"), SubResource("ShaderMaterial_wg5fx"), SubResource("ShaderMaterial_gw6ig"), SubResource("ShaderMaterial_utwia"), SubResource("ShaderMaterial_grq4g")])
@@ -98,10 +99,6 @@ size = Vector3(18, 0.1, 1)
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=490957153]
 environment = SubResource("Environment_6map0")
 
-[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=981196298]
-stream = ExtResource("4_7mycd")
-volume_db = -10.0
-
 [node name="SFX" type="AudioStreamPlayer" parent="." unique_id=442694962]
 stream = ExtResource("5_gkc6h")
 
@@ -109,3 +106,7 @@ stream = ExtResource("5_gkc6h")
 process_mode = 3
 script = SubResource("GDScript_keiq7")
 node = NodePath("..")
+
+[node name="AudioStreamPlayerMidi" type="AudioStreamPlayerMidi" parent="." unique_id=1156780258]
+soundfont = ExtResource("6_7mycd")
+stream = SubResource("AudioStreamGenerator_272bh")

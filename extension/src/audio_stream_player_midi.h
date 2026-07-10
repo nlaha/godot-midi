@@ -40,6 +40,10 @@ protected:
         ClassDB::bind_method(D_METHOD("set_sample_rate", "sample_rate"), &AudioStreamPlayerMidi::set_sample_rate);
         ADD_PROPERTY(PropertyInfo(Variant::INT, "sample_rate"), "set_sample_rate", "get_sample_rate");
 
+        ClassDB::bind_method(D_METHOD("get_buffer_size"), &AudioStreamPlayerMidi::get_buffer_size);
+        ClassDB::bind_method(D_METHOD("set_buffer_size", "buffer_size"), &AudioStreamPlayerMidi::set_buffer_size);
+        ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "buffer_size"), "set_buffer_size", "get_buffer_size");
+
         ClassDB::bind_method(D_METHOD("get_soundfont"), &AudioStreamPlayerMidi::get_soundfont);
         ClassDB::bind_method(D_METHOD("set_soundfont", "soundfont"), &AudioStreamPlayerMidi::set_soundfont);
         ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "soundfont", PROPERTY_HINT_RESOURCE_TYPE, "Sf2Resource"), "set_soundfont", "get_soundfont");
@@ -51,6 +55,9 @@ protected:
     /// @brief The sample rate of the audio stream player
     int sample_rate;
 
+    /// @brief The buffer size of the audio stream generator in seconds
+    double buffer_size;
+
     /// @brief The soundfont resource
     Ref<Sf2Resource> soundfont;
 
@@ -59,13 +66,15 @@ private:
 
     tsf *sf2_handle;
 
+    PackedFloat32Array render_buffer;
+
 public:
     AudioStreamPlayerMidi();
 
     ~AudioStreamPlayerMidi();
 
     void _ready() override;
-    void _process(float delta);
+    void _process(double delta) override;
 
     void fill_buffer();
 
@@ -77,6 +86,9 @@ public:
 
     int get_sample_rate() const { return this->sample_rate; }
     void set_sample_rate(int sample_rate) { this->sample_rate = sample_rate; }
+
+    double get_buffer_size() const { return this->buffer_size; }
+    void set_buffer_size(double buffer_size) { this->buffer_size = buffer_size; }
 
     Ref<Sf2Resource> get_soundfont() const { return this->soundfont; }
     void set_soundfont(const Ref<Sf2Resource> &soundfont) { this->soundfont = soundfont; }

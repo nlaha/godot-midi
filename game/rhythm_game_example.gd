@@ -193,7 +193,7 @@ func _input(event: InputEvent) -> void:
 	if not game_started:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
-		var t := midi_player.current_time
+		var t: float = midi_player.current_time
 		if event.keycode == KEY_D:
 			_try_hit(t, true) # Don - red
 		elif event.keycode == KEY_F:

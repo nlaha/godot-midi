@@ -8,6 +8,7 @@ std::mutex tsf_mutex;
 AudioStreamPlayerMidi::AudioStreamPlayerMidi()
 {
     this->sample_rate = 44100;
+    this->buffer_size = 0.03;
 
     // create an audio stream generator
     this->stream = Ref<AudioStream>(memnew(AudioStreamGenerator()));
@@ -36,6 +37,7 @@ void AudioStreamPlayerMidi::_ready()
     if (this->has_stream_playback())
     {
         Object::cast_to<AudioStreamGenerator>(this->stream.ptr())->set_mix_rate(this->sample_rate);
+        Object::cast_to<AudioStreamGenerator>(this->stream.ptr())->set_buffer_length(this->buffer_size);
 
         this->playback = (Ref<AudioStreamGeneratorPlayback>)this->get_stream_playback();
 
@@ -74,12 +76,12 @@ void AudioStreamPlayerMidi::_ready()
 
     tsf_mutex.unlock();
 
-    this->play();
+    fill_buffer();
 }
 
 /// @brief Process the audio stream player
 /// @param delta the delta time
-void AudioStreamPlayerMidi::_process(float delta)
+void AudioStreamPlayerMidi::_process(double delta)
 {
     // don't run in editor
     if (Engine::get_singleton()->is_editor_hint())
@@ -106,26 +108,20 @@ void AudioStreamPlayerMidi::fill_buffer()
     {
         return;
     }
-    else
-    {
-        // log the number of frames available
-        UtilityFunctions::print("[GodotMidi ASPM] Frames Available: " + itos(frames_available));
-    }
 
-    PackedFloat32Array buffer = PackedFloat32Array();
-    buffer.resize(frames_available * 2);
+    this->render_buffer.resize(frames_available * 2);
 
     tsf_mutex.lock();
-    tsf_render_float(this->sf2_handle, buffer.ptrw(), frames_available, 0);
+    tsf_render_float(this->sf2_handle, this->render_buffer.ptrw(), frames_available, 0);
     tsf_mutex.unlock();
 
     // iterate through the buffer and push the frames to the playback
     // even indices are the left channel, odd indices are the right channel
-    for (int i = 0; i < buffer.size(); i += 2)
+    for (int i = 0; i < frames_available * 2; i += 2)
     {
-        float left = buffer[i];
-        float right = buffer[i + 1];
-        UtilityFunctions::print("[GodotMidi ASPM] Pushing Frame: " + itos(i / 2) + " Left: " + rtos(left) + " Right: " + rtos(right));
+        float left = this->render_buffer[i];
+        float right = this->render_buffer[i + 1];
+        // UtilityFunctions::print("[GodotMidi ASPM] Pushing Frame: " + itos(i / 2) + " Left: " + rtos(left) + " Right: " + rtos(right));
         this->playback->push_frame(Vector2(left, right));
     }
 }
@@ -142,7 +138,7 @@ void AudioStreamPlayerMidi::note_on(int note, float velocity, int channel)
     }
 
     tsf_mutex.lock();
-    tsf_channel_note_on(this->sf2_handle, channel, note, velocity);
+    tsf_channel_note_on(this->sf2_handle, channel, note, velocity / 127.0f);
     tsf_mutex.unlock();
 }
 
