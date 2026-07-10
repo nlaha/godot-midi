@@ -7,7 +7,7 @@ var midi_import_plugin
 var sf2_import_plugin
 
 var main_view
-var export_plugin : AndroidExportPlugin
+var export_plugin: AndroidExportPlugin
 
 func _enter_tree():
 	midi_import_plugin = preload("midi_import_plugin.gd").new()
@@ -34,30 +34,8 @@ func _exit_tree():
 	remove_import_plugin(sf2_import_plugin)
 	sf2_import_plugin = null
 
-	if is_instance_valid(main_view):
-		main_view.queue_free()
-
 	remove_export_plugin(export_plugin)
 	export_plugin = null
-
-
-func _has_main_screen():
-	return true
-
-
-func _make_visible(visible):
-	if is_instance_valid(main_view):
-		main_view.visible = visible
-
-
-func _get_plugin_name():
-	return "Godot Midi"
-
-
-func _get_plugin_icon():
-	# Must return some kind of Texture for the icon.
-	return get_editor_interface().get_base_control().get_theme_icon("AudioStreamPolyphonic", "EditorIcons")
-
 
 class AndroidExportPlugin extends EditorExportPlugin:
 	var _plugin_name = "GodotMidi"
