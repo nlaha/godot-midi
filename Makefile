@@ -42,11 +42,26 @@ extension_api_json: ## Dump extension_api.json for current version of Godot
 
 -----: ## ----- Godot-CPP builds -----
 
+LINUX_ARM64_COMPILER = CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ AR=aarch64-linux-gnu-ar RANLIB=aarch64-linux-gnu-ranlib
+LINUX_RV64_COMPILER = CC=riscv64-linux-gnu-gcc CXX=riscv64-linux-gnu-g++ AR=riscv64-linux-gnu-ar RANLIB=riscv64-linux-gnu-ranlib
+
 godot_cpp_linux: extension_api_json ## Build Godot CPP in Linux
 	@cd godot-cpp && scons platform=linux arch=x86_64
 
 godot_cpp_linux_debug: extension_api_json ## Build Godot CPP in Linux with extra debugging
 	@cd godot-cpp && scons platform=linux arch=x86_64 debug_symbols=true
+
+godot_cpp_linux_arm64: extension_api_json ## Cross-build Godot CPP for Linux ARM64
+	@cd godot-cpp && scons platform=linux arch=arm64 $(LINUX_ARM64_COMPILER)
+
+godot_cpp_linux_arm64_debug: extension_api_json ## Cross-build Godot CPP for Linux ARM64 with extra debugging
+	@cd godot-cpp && scons platform=linux arch=arm64 debug_symbols=true $(LINUX_ARM64_COMPILER)
+
+godot_cpp_linux_rv64: extension_api_json ## Cross-build Godot CPP for Linux RISC-V 64-bit
+	@cd godot-cpp && scons platform=linux arch=rv64 $(LINUX_RV64_COMPILER)
+
+godot_cpp_linux_rv64_debug: extension_api_json ## Cross-build Godot CPP for Linux RISC-V 64-bit with extra debugging
+	@cd godot-cpp && scons platform=linux arch=rv64 debug_symbols=true $(LINUX_RV64_COMPILER)
 
 godot_cpp_mac: extension_api_json ## Build Godot CPP in MacOS
 	@cd godot-cpp && scons platform=macos arch=universal
@@ -67,6 +82,18 @@ gdextension_linux_debug: ## Build GDExtensions (Debug) for Linux.
 
 gdextension_linux_release: ## Build GDExtensions (Release) for Linux.
 	scons platform=linux target=template_release arch=x86_64
+
+gdextension_linux_arm64_debug: ## Cross-build GDExtensions (Debug) for Linux ARM64.
+	scons platform=linux target=template_debug arch=arm64 debug_symbols=true $(LINUX_ARM64_COMPILER)
+
+gdextension_linux_arm64_release: ## Cross-build GDExtensions (Release) for Linux ARM64.
+	scons platform=linux target=template_release arch=arm64 $(LINUX_ARM64_COMPILER)
+
+gdextension_linux_rv64_debug: ## Cross-build GDExtensions (Debug) for Linux RISC-V 64-bit.
+	scons platform=linux target=template_debug arch=rv64 debug_symbols=true $(LINUX_RV64_COMPILER)
+
+gdextension_linux_rv64_release: ## Cross-build GDExtensions (Release) for Linux RISC-V 64-bit.
+	scons platform=linux target=template_release arch=rv64 $(LINUX_RV64_COMPILER)
 
 gdextension_windows_debug: ## Build GDExtensions (Debug) for Windows.
 	scons platform=windows target=template_debug arch=x86_64 debug_symbols=true

@@ -54,6 +54,10 @@ jobs:
               matrix["include"].extend([
                   {"identifier": "linux-debug", "os": "ubuntu-22.04", "name": "\U0001f427 Linux Debug", "runner": "self-hosted", "target": "template_debug", "platform": "linux", "arch": "x86_64"},
                   {"identifier": "linux-release", "os": "ubuntu-22.04", "name": "\U0001f427 Linux Release", "runner": "self-hosted", "target": "template_release", "platform": "linux", "arch": "x86_64"},
+                  {"identifier": "linux-arm64-debug", "os": "ubuntu-22.04", "name": "\U0001f427 Linux ARM64 Debug", "target": "template_debug", "platform": "linux", "arch": "arm64"},
+                  {"identifier": "linux-arm64-release", "os": "ubuntu-22.04", "name": "\U0001f427 Linux ARM64 Release", "target": "template_release", "platform": "linux", "arch": "arm64"},
+                  {"identifier": "linux-rv64-debug", "os": "ubuntu-22.04", "name": "\U0001f427 Linux RISC-V 64-bit Debug", "target": "template_debug", "platform": "linux", "arch": "rv64"},
+                  {"identifier": "linux-rv64-release", "os": "ubuntu-22.04", "name": "\U0001f427 Linux RISC-V 64-bit Release", "target": "template_release", "platform": "linux", "arch": "rv64"},
               ])
 
           if "${{ inputs.build_android }}" == "true":
@@ -97,6 +101,17 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -qqq build-essential pkg-config
 
+      - name: Set up Linux ARM64/RISC-V cross compiler
+        if: ${{ matrix.platform == 'linux' && (matrix.arch == 'arm64' || matrix.arch == 'rv64') }}
+        run: |
+          if [ "${{ matrix.arch }}" = "arm64" ]; then
+            sudo apt-get install -qqq g++-aarch64-linux-gnu
+            echo "GODOT_MIDI_SCONS_COMPILER_ARGS=CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ AR=aarch64-linux-gnu-ar RANLIB=aarch64-linux-gnu-ranlib" >> "$GITHUB_ENV"
+          else
+            sudo apt-get install -qqq g++-riscv64-linux-gnu
+            echo "GODOT_MIDI_SCONS_COMPILER_ARGS=CC=riscv64-linux-gnu-gcc CXX=riscv64-linux-gnu-g++ AR=riscv64-linux-gnu-ar RANLIB=riscv64-linux-gnu-ranlib" >> "$GITHUB_ENV"
+          fi
+
       - name: Setup MinGW for Windows/MinGW build
         if: ${{ matrix.platform == 'windows' }}
         uses: msys2/setup-msys2@v2
@@ -108,13 +123,13 @@ jobs:
       - name: Compile godot-cpp
         shell: sh
         run: |
-          scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}'
+          scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}' $GODOT_MIDI_SCONS_COMPILER_ARGS
         working-directory: godot-cpp
 
       - name: Compile Extension
         shell: sh
         run: |
-          scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}'
+          scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}' $GODOT_MIDI_SCONS_COMPILER_ARGS
 
       - name: Delete compilation files
         if: ${{ matrix.platform == 'windows' }}

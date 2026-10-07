@@ -19,7 +19,7 @@ This GDExtension addon is compatible with Godot version 4.2.2 and higher. Earlie
 
 ### Platforms
 
-This extension is compatible with Windows, Mac and Linux. Support for Android is also availble but is not yet integrated into the CI pipelines. For more information on how to compile for Android, see this pull request:
+This extension is compatible with Windows, macOS, and Linux on x86_64, ARM64, and RISC-V 64-bit. Support for Android is also available but is not yet integrated into the CI pipelines. For more information on how to compile for Android, see this pull request:
 https://github.com/nlaha/godot-midi/pull/35
 
 ## Installation from binaries
@@ -44,6 +44,14 @@ https://github.com/nlaha/godot-midi/pull/35
 5. Copy the `game/addons/godot_midi` folder to your project's addons folder
 
 6. Enable the plugin in the Godot project settings menu
+
+### Cross-compiling for Linux ARM64
+
+On Debian or Ubuntu, install the AArch64 cross compiler with `sudo apt install g++-aarch64-linux-gnu`. From the repository root, build the extension with `make gdextension_linux_arm64_debug` or `make gdextension_linux_arm64_release`. Each target also builds the matching `godot-cpp` library. The built extension is placed in `game/addons/godot_midi/bin/linux`. For standalone `godot-cpp` builds, use `make godot_cpp_linux_arm64` or `make godot_cpp_linux_arm64_debug`.
+
+### Cross-compiling for Linux RISC-V 64-bit
+
+On Debian or Ubuntu, install the RISC-V cross compiler with `sudo apt install g++-riscv64-linux-gnu`. From the repository root, build the extension with `make gdextension_linux_rv64_debug` or `make gdextension_linux_rv64_release`. Each target also builds the matching `godot-cpp` library. The built extension is placed in `game/addons/godot_midi/bin/linux`. For standalone `godot-cpp` builds, use `make godot_cpp_linux_rv64` or `make godot_cpp_linux_rv64_debug`.
 
 ## Usage
 
