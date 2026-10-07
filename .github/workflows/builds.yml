@@ -120,16 +120,46 @@ jobs:
         if: ${{ matrix.platform == 'android' }}
         run: echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;23.2.8568313"
 
+      - name: Identify SCons cache inputs
+        id: cache-identity
+        shell: bash
+        run: |
+          case "${{ matrix.platform }}:${{ matrix.arch }}" in
+            linux:x86_64) compiler_version="$(g++ -dumpfullversion -dumpversion)" ;;
+            linux:arm64) compiler_version="$(aarch64-linux-gnu-g++ -dumpfullversion -dumpversion)" ;;
+            linux:rv64) compiler_version="$(riscv64-linux-gnu-g++ -dumpfullversion -dumpversion)" ;;
+            windows:x86_64) compiler_version="$(g++ -dumpfullversion -dumpversion)" ;;
+            macos:universal) compiler_version="$(clang++ -dumpfullversion -dumpversion)-xcode-$(xcodebuild -version | awk '/Xcode/ {print $2}')" ;;
+            android:arm64) compiler_version="ndk-23.2.8568313" ;;
+            *) echo "Unsupported build target" >&2; exit 1 ;;
+          esac
+
+          compiler_version="$(printf '%s' "$compiler_version" | tr -cs '[:alnum:]._-' '-')"
+          echo "compiler=$compiler_version" >> "$GITHUB_OUTPUT"
+          echo "godot_cpp=$(git -C godot-cpp rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache SCons build artifacts
+        uses: actions/cache@v4
+        with:
+          path: .scons_cache
+          key: scons-${{ runner.os }}-${{ matrix.os }}-${{ matrix.platform }}-${{ matrix.arch }}-${{ matrix.target }}-scons-4.5.2-${{ steps.cache-identity.outputs.compiler }}-godotcpp-${{ steps.cache-identity.outputs.godot_cpp }}-${{ github.sha }}
+          restore-keys: |
+            scons-${{ runner.os }}-${{ matrix.os }}-${{ matrix.platform }}-${{ matrix.arch }}-${{ matrix.target }}-scons-4.5.2-${{ steps.cache-identity.outputs.compiler }}-godotcpp-${{ steps.cache-identity.outputs.godot_cpp }}-
+
       - name: Compile godot-cpp
         shell: sh
         run: |
           scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}' $GODOT_MIDI_SCONS_COMPILER_ARGS
+        env:
+          SCONS_CACHE: ${{ github.workspace }}/.scons_cache
         working-directory: godot-cpp
 
       - name: Compile Extension
         shell: sh
         run: |
           scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}' $GODOT_MIDI_SCONS_COMPILER_ARGS
+        env:
+          SCONS_CACHE: ${{ github.workspace }}/.scons_cache
 
       - name: Delete compilation files
         if: ${{ matrix.platform == 'windows' }}

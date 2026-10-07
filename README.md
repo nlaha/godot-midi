@@ -1,6 +1,7 @@
 ![banner_logo_long](https://github.com/nlaha/godot-midi/assets/10292944/4e5b5125-0453-4f92-9ac7-048cfb2c8067)
 
 [![Builds](https://github.com/nlaha/godot-midi/actions/workflows/builds.yml/badge.svg)](https://github.com/nlaha/godot-midi/actions/workflows/builds.yml)
+[![GdUnit4 Tests](https://github.com/nlaha/godot-midi/actions/workflows/gdunit-tests.yml/badge.svg)](https://github.com/nlaha/godot-midi/actions/workflows/gdunit-tests.yml)
 [![CodeQL](https://github.com/nlaha/godot-midi/actions/workflows/codeql.yml/badge.svg)](https://github.com/nlaha/godot-midi/actions/workflows/codeql.yml)
 
 ## Overview
@@ -44,6 +45,16 @@ https://github.com/nlaha/godot-midi/pull/35
 5. Copy the `game/addons/godot_midi` folder to your project's addons folder
 
 6. Enable the plugin in the Godot project settings menu
+
+## Tests
+
+The GdUnit4 suite in `game/tests` checks that every bundled MIDI file loads into a `MidiResource` and that `MidiPlayer` emits note events while playback advances. The `GdUnit4 Tests` GitHub Actions workflow builds the Linux extension and runs these tests on pushes and pull requests targeting `main`. Both it and the `Builds` workflow persist SCons' content-addressed build cache between runs to reuse unchanged `godot-cpp` and extension outputs.
+
+To run the suite locally with Godot 4.7.1, build the Linux debug extension, install GdUnit4 v6.2.0 into `game/addons/gdUnit4`, then run this from the `game` directory:
+
+```sh
+GODOT_BIN=/path/to/godot ./addons/gdUnit4/runtest.sh -a res://tests
+```
 
 ### Cross-compiling for Linux ARM64
 

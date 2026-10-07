@@ -2,6 +2,7 @@
 .godot/
 game/addons/godot_midi/bin/*
 .sconsign*.dblite
+.scons_cache/
 /bin
 .gradle/
 
