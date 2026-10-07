@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import os
+import platform
+import shutil
 
 def normalize_path(val, env):
     return val if os.path.isabs(val) else os.path.join(env.Dir("#").abspath, val)
@@ -33,6 +35,40 @@ opts.Add(
     )
 )
 opts.Update(localEnv)
+
+linux_cross_compilers = {
+    "arm64": ("aarch64", ("arm64", "aarch64")),
+    "rv64": ("riscv64", ("rv64", "riscv64")),
+}
+# Set compilers on the parent environment before godot-cpp applies its platform flags.
+target_arch = ARGUMENTS.get("arch", "")
+target_arch_aliases = {
+    "aarch64": "arm64",
+    "armv8": "arm64",
+    "rv": "rv64",
+    "riscv": "rv64",
+    "riscv64": "rv64",
+}
+target_arch = target_arch_aliases.get(target_arch, target_arch)
+cross_compiler = linux_cross_compilers.get(target_arch)
+host_arch = platform.machine().lower()
+target_platform = ARGUMENTS.get("platform", platform.system().lower())
+if target_platform == "linux" and cross_compiler and host_arch not in cross_compiler[1]:
+    compiler_prefix = cross_compiler[0] + "-linux-gnu"
+    if not shutil.which(compiler_prefix + "-g++"):
+        raise UserError(
+            "Linux {} cross-compilation requires {}-g++ in PATH".format(target_arch, compiler_prefix)
+        )
+    localEnv.Replace(
+        CC=compiler_prefix + "-gcc",
+        CXX=compiler_prefix + "-g++",
+        SHCC=compiler_prefix + "-gcc",
+        SHCXX=compiler_prefix + "-g++",
+        LINK=compiler_prefix + "-g++",
+        SHLINK=compiler_prefix + "-g++",
+        AR=compiler_prefix + "-ar",
+        RANLIB=compiler_prefix + "-ranlib",
+    )
 
 Help(opts.GenerateHelpText(localEnv))
 

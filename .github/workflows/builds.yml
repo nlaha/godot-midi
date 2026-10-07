@@ -106,10 +106,8 @@ jobs:
         run: |
           if [ "${{ matrix.arch }}" = "arm64" ]; then
             sudo apt-get install -qqq g++-aarch64-linux-gnu
-            echo "GODOT_MIDI_SCONS_COMPILER_ARGS=CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ AR=aarch64-linux-gnu-ar RANLIB=aarch64-linux-gnu-ranlib" >> "$GITHUB_ENV"
           else
             sudo apt-get install -qqq g++-riscv64-linux-gnu
-            echo "GODOT_MIDI_SCONS_COMPILER_ARGS=CC=riscv64-linux-gnu-gcc CXX=riscv64-linux-gnu-g++ AR=riscv64-linux-gnu-ar RANLIB=riscv64-linux-gnu-ranlib" >> "$GITHUB_ENV"
           fi
 
       - name: Setup MinGW for Windows/MinGW build
@@ -147,9 +145,10 @@ jobs:
             scons-${{ runner.os }}-${{ matrix.os }}-${{ matrix.platform }}-${{ matrix.arch }}-${{ matrix.target }}-scons-4.5.2-${{ steps.cache-identity.outputs.compiler }}-godotcpp-${{ steps.cache-identity.outputs.godot_cpp }}-
 
       - name: Compile godot-cpp
+        if: ${{ matrix.platform != 'linux' || (matrix.arch != 'arm64' && matrix.arch != 'rv64') }}
         shell: sh
         run: |
-          scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}' $GODOT_MIDI_SCONS_COMPILER_ARGS
+          scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}'
         env:
           SCONS_CACHE: ${{ github.workspace }}/.scons_cache
         working-directory: godot-cpp
@@ -157,7 +156,7 @@ jobs:
       - name: Compile Extension
         shell: sh
         run: |
-          scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}' $GODOT_MIDI_SCONS_COMPILER_ARGS
+          scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}'
         env:
           SCONS_CACHE: ${{ github.workspace }}/.scons_cache
 
