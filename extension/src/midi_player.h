@@ -288,6 +288,11 @@ public:
             // get events for this track
             Array events = this->midi->get_tracks()[i].get("events");
 
+            // reset offset in case current time is less than the earliest event time
+            this->track_index_offsets[i] = 0;
+
+            double prev_track_time = 0;
+
             // search forward in time
             for (uint64_t j = 0; j < events.size(); j++)
             {
@@ -301,7 +306,8 @@ public:
 
                 // convert to seconds for ease of use
                 double event_delta_seconds = event_delta / 1000000.0;
-                double event_absolute_time = event_delta_seconds + static_cast<double>(this->prev_track_times[i]);
+                double event_absolute_time = event_delta_seconds + prev_track_time;
+                prev_track_time = static_cast<double>(this->prev_track_times[i]);
 
                 // update the offset if the event time is less than the current time
                 if (this->current_time >= event_absolute_time)
